@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 209
   Width = 853
   ActiveControl = RadioSPI
-  Caption = 'AsProgrammer'
+  Caption = 'AsProgrammer dregmod v3'
   ClientHeight = 521
   ClientWidth = 853
   Constraints.MinHeight = 300
@@ -699,9 +699,9 @@ object MainForm: TMainForm
     Width = 853
     Align = alBottom
     Lines.Strings = (
-      'AsProgrammer v2.0.2'
-      'https://github.com/nofeletru/UsbAsp-flash'
-      'asprogrammer@inbox.ru'
+      'AsProgrammer dregmod v3'
+      'https://github.com/therealdreg/asprogrammer-dregmod'
+      'dreg@rootkit.es'
     )
     ParentFont = False
     PopupMenu = LogPopupMenu
@@ -930,11 +930,17 @@ object MainForm: TMainForm
       end
     end
     object MenuItemHardware: TMenuItem
-      Caption = 'Программатор'
+	  Caption = 'Программатор'
+      object MenuHWBUZZPIRAT: TMenuItem
+	    Checked = True
+        AutoCheck = True
+        Caption = 'Buzzpirat / Buspirate'
+        RadioItem = True
+        OnClick = MenuHWBUZZPIRATClick
+      end
       object MenuHWUSBASP: TMenuItem
         AutoCheck = True
         Caption = 'UsbAsp'
-        Checked = True
         RadioItem = True
         OnClick = MenuHWUSBASPClick
       end
@@ -969,6 +975,53 @@ object MainForm: TMainForm
     end
     object LangMenuItem: TMenuItem
       Caption = 'Language'
+    end
+	object MenuBuzzpirat: TMenuItem
+        Caption = 'Buzzpirat / Buspirate'
+		object MenuBuzzpiratCOMPort: TMenuItem
+          Caption = 'Buzzpirat / Buspirate COMPort:'
+          OnClick = MenuBuzzpiratCOMPortClick
+        end
+		object MenuBuzzpiratPullups: TMenuItem
+		  Checked = True
+          AutoCheck = True
+          Caption = 'Pull UPs ON'
+        end
+        object MenuBuzzpiratPower: TMenuItem
+		  Checked = True
+          AutoCheck = True
+          Caption = 'Power ON'
+        end
+		object MenuBuzzpiratI2CClock: TMenuItem
+		  Caption = 'I2C Clock'
+		  object MenuBuzzpiratI2C100KHz: TMenuItem
+			AutoCheck = True
+			Caption = '100 KHz'
+			RadioItem = True
+		  end
+		  object MenuBuzzpiratI2C50KHz: TMenuItem
+			Tag = 1
+			AutoCheck = True
+			Caption = '50 KHz'
+			Checked = True
+			RadioItem = True
+		  end
+		  object MenuBuzzpiratI2C5KHz: TMenuItem
+			Tag = 2
+			AutoCheck = True
+			Caption = '5 KHz'
+			RadioItem = True
+		  end
+		end
+		object MenuBuzzpiratJustI2CScan: TMenuItem
+		  Checked = False
+          AutoCheck = True
+          Caption = 'Just I2C Scanner'
+        end
+    end
+	object CreditsMenuItem: TMenuItem
+      Caption = 'Credits'
+      OnClick = CreditsMenuItemClick
     end
   end
   object ImageList: TImageList
