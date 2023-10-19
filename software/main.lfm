@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 209
   Width = 853
   ActiveControl = RadioSPI
-  Caption = 'AsProgrammer dregmod v3'
+  Caption = 'AsProgrammer dregmod v3 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
   ClientHeight = 521
   ClientWidth = 853
   Constraints.MinHeight = 300
@@ -1018,6 +1018,10 @@ object MainForm: TMainForm
           AutoCheck = True
           Caption = 'Just I2C Scanner'
         end
+		object DebugconsoleMenuItem: TMenuItem
+		  Caption = 'Launch Console'
+		  OnClick = DebugconsoleMenuItemClick
+		end
     end
 	object CreditsMenuItem: TMenuItem
       Caption = 'Credits'

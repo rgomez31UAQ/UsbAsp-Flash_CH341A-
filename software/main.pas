@@ -97,6 +97,7 @@ type
     MPHexEditorEx: TMPHexEditorEx;
     ScriptsMenuItem: TMenuItem;
     CreditsMenuItem: TMenuItem;
+    DebugconsoleMenuItem: TMenuItem;
     MenuItemHardware: TMenuItem;
     MenuBuzzpirat: TMenuItem;
     MenuBuzzpiratPullups: TMenuItem;
@@ -197,6 +198,7 @@ type
     procedure I2C_DevAddrChange(Sender: TObject);
     procedure ScriptsMenuItemClick(Sender: TObject);
     procedure CreditsMenuItemClick(Sender: TObject);
+    procedure DebugconsoleMenuItemClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure StartAddressEditChange(Sender: TObject);
     procedure StartAddressEditKeyPress(Sender: TObject; var Key: char);
@@ -2745,6 +2747,11 @@ end;
 procedure TMainForm.ScriptsMenuItemClick(Sender: TObject);
 begin
   ScriptEditForm.Show;
+end;
+
+procedure TMainForm.DebugconsoleMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start tail -F buzzpirathlp.log', []);
 end;
 
 procedure TMainForm.CreditsMenuItemClick(Sender: TObject);
