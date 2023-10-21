@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 209
   Width = 853
   ActiveControl = RadioSPI
-  Caption = 'AsProgrammer dregmod v3 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
+  Caption = 'AsProgrammer dregmod v3.3 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
   ClientHeight = 521
   ClientWidth = 853
   Constraints.MinHeight = 300
@@ -699,7 +699,7 @@ object MainForm: TMainForm
     Width = 853
     Align = alBottom
     Lines.Strings = (
-      'AsProgrammer dregmod v3'
+      'AsProgrammer dregmod v3.3'
       'https://github.com/therealdreg/asprogrammer-dregmod'
       'dreg@rootkit.es'
     )
@@ -983,7 +983,6 @@ object MainForm: TMainForm
           OnClick = MenuBuzzpiratCOMPortClick
         end
 		object MenuBuzzpiratPullups: TMenuItem
-		  Checked = True
           AutoCheck = True
           Caption = 'Pull UPs ON'
         end
@@ -992,36 +991,80 @@ object MainForm: TMainForm
           AutoCheck = True
           Caption = 'Power ON'
         end
-		object MenuBuzzpiratI2CClock: TMenuItem
-		  Caption = 'I2C Clock'
-		  object MenuBuzzpiratI2C100KHz: TMenuItem
-			AutoCheck = True
-			Caption = '100 KHz'
-			RadioItem = True
-		  end
-		  object MenuBuzzpiratI2C50KHz: TMenuItem
-			Tag = 1
-			AutoCheck = True
-			Caption = '50 KHz'
-			Checked = True
-			RadioItem = True
-		  end
-		  object MenuBuzzpiratI2C5KHz: TMenuItem
-			Tag = 2
-			AutoCheck = True
-			Caption = '5 KHz'
-			RadioItem = True
-		  end
+		object MenuBuzzpiratSubI2C: TMenuItem
+			Caption = 'I2C'
+			object MenuBuzzpiratI2CClock: TMenuItem
+			  Caption = 'Clock'
+			  object MenuBuzzpiratI2C100KHz: TMenuItem
+				AutoCheck = True
+				Caption = '100 KHz'
+				RadioItem = True
+			  end
+			  object MenuBuzzpiratI2C50KHz: TMenuItem
+				AutoCheck = True
+				Caption = '50 KHz'
+				Checked = True
+				RadioItem = True
+			  end
+			  object MenuBuzzpiratI2C5KHz: TMenuItem
+				AutoCheck = True
+				Caption = '5 KHz'
+				RadioItem = True
+			  end
+			end
+			object MenuBuzzpiratJustI2CScan: TMenuItem
+			  Checked = False
+			  AutoCheck = True
+			  Caption = 'Just I2C Scanner'
+			end
 		end
-		object MenuBuzzpiratJustI2CScan: TMenuItem
-		  Checked = False
-          AutoCheck = True
-          Caption = 'Just I2C Scanner'
-        end
+		object MenuBuzzpiratSubSPI: TMenuItem
+			Caption = 'SPI'
+			object MenuBuzzpiratSPINormal: TMenuItem
+				AutoCheck = True
+				Caption = 'Output Normal (H=3.3V)'
+				Checked = True
+				RadioItem = True
+			end
+			object MenuBuzzpiratSPIHiz: TMenuItem
+				Tag = 1
+				AutoCheck = True
+				Caption = 'Output Open drain (H=Hi-Z)'
+				RadioItem = True
+			end  
+			object MenuBuzzpiratSPIClock: TMenuItem
+			  Caption = 'Clock'
+			  object MenuBuzzpiratSPI250KHz: TMenuItem
+				AutoCheck = True
+				Caption = '250 KHz'
+				RadioItem = True
+			  end
+			  object MenuBuzzpiratSPI125KHz: TMenuItem
+				AutoCheck = True
+				Caption = '125 KHz'
+				Checked = True
+				RadioItem = True
+			  end
+			  object MenuBuzzpiratSPI30KHz: TMenuItem
+				AutoCheck = True
+				Caption = '30 KHz'
+				RadioItem = True
+			  end
+			end
+		end
 		object DebugconsoleMenuItem: TMenuItem
 		  Caption = 'Launch Console'
 		  OnClick = DebugconsoleMenuItemClick
 		end
+		object ClearBuzzlogMenuItem: TMenuItem
+		  Caption = 'kill tail and clear log on init'
+		  Checked = True
+          AutoCheck = True
+		end
+    end
+	object ListcomportsMenuItem: TMenuItem
+      Caption = 'List FREE COM Ports'
+      OnClick = ListcomportsMenuItemClick
     end
 	object CreditsMenuItem: TMenuItem
       Caption = 'Credits'

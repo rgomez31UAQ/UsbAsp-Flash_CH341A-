@@ -12,6 +12,7 @@
 #include <windows.h>
 #include "buzzpirathlp.h"
 #include "log_en.h"
+#include <share.h>
 
 typedef struct
 {
@@ -20,7 +21,11 @@ typedef struct
 
 COMOP_t* volatile com_glb = NULL;
 unsigned char* volatile i2c_memaux = NULL;
+unsigned char* volatile spi_memaux = NULL;
 extern unsigned int volatile end_fast;
+
+const char* const as_msg = "keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient";
+
 
 BOOL CreateCOM(COMOP_t* com, const char* name)
 {
@@ -220,6 +225,45 @@ BOOL EnterBINMode(COMOP_t* com)
 	return FALSE;
 }
 
+
+BOOL EnterSPIMode(COMOP_t* com)
+{
+	unsigned char recv_byte = 0;
+	size_t bytes_received = 0;
+
+	FlushCOMIn(com);
+
+	while (1)
+	{
+		if (bytes_received == 0)
+		{
+			bytes_received = ComWriteByte(com, BHL_ENTER_BIN_SPI, 0);
+		}
+		if (recv_byte != 'S')
+		{
+			bytes_received = ComReadByte(com, &recv_byte, 0);
+		}
+		if (recv_byte == 'S')
+		{
+			bytes_received = ComReadByte(com, &recv_byte, 0);
+			if (recv_byte == 'P')
+			{
+				bytes_received = ComReadByte(com, &recv_byte, 0);
+				if (recv_byte == 'I')
+				{
+					bytes_received = ComReadByte(com, &recv_byte, 0);
+					if (recv_byte == '1')
+					{
+						return TRUE;
+					}
+				}
+			}
+		}
+	}
+
+	return FALSE;
+}
+
 BOOL EnterI2CMode(COMOP_t* com)
 {
 	unsigned char recv_byte = 0;
@@ -316,6 +360,17 @@ BUZZPIRATHLP_API BOOL __stdcall bhl_enter_raw_bitbang(void)
 	fprintf(LOG_FILE, "Entering bin mode\n");
 	EnterBINMode(com_glb);
 	Sleep(500);
+	FlushCOMIn(com_glb);
+
+	return TRUE;
+}
+
+BUZZPIRATHLP_API BOOL __stdcall bhl_enter_bin_spi(void)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	EnterSPIMode(com_glb);
+	Sleep(500);
+	fprintf(LOG_FILE, "Flushing Com In\n");
 	FlushCOMIn(com_glb);
 
 	return TRUE;
@@ -455,20 +510,292 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_i2c_scan(unsigned char* detected_arr
 	return founds;
 }
 
-BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner)
+BUZZPIRATHLP_API unsigned char* __stdcall bhl_asprog_spi_get_memaux(void)
 {
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
-	unsigned int speed = 0;
-	unsigned int phs = 0;
-	unsigned i2c_detected = 0;
-	unsigned int retf = 0;
+	return spi_memaux;
+}
+
+volatile unsigned int last_status = 0x69;
+
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_cs_low(void)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned char status = 0;
+
+	/*
+	if (last_status == 0)
+	{
+		return 1;
+	}
+	*/
+
+	last_status = 0;
+
+	fprintf(LOG_FILE, "bhl_asprog_spi_cs_low\n");
+
+	ComWriteByte(com_glb, BHL_SPI_CS_ACTIVE_LOW, 0);
+	ComReadByte(com_glb, &status, 0);
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_cs_high(void)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned char status = 0;
+
+	/*
+	if (last_status == 1)
+	{
+		return 1;
+	}
+	*/
+
+	last_status = 1;
+
+	fprintf(LOG_FILE, "bhl_asprog_spi_cs_high\n");
+
+	ComWriteByte(com_glb, BHL_SPI_CS_ACTIVE_HIGH, 0);
+	ComReadByte(com_glb, &status, 0);
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_clear_log(void)
+{ // crap in the crap wtf MUTEXXXX
+	#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	FILE* tmp_aux = NULL;
+
+	fprintf(LOG_FILE, "bhl_asprog_clear_log");
+
+	Sleep(5000);
+	system("cmd /c start taskkill /f /t /im tail.exe");
+	Sleep(5000);
+
+	if (LOG_FILE != stdout)
+	{
+		tmp_aux = LOG_FILE;
+		LOG_FILE = stdout;
+		Sleep(3000);
+		fclose(tmp_aux);
+		tmp_aux = NULL;
+	}
+
+	tmp_aux = _fsopen("buzzpirathlp.log", "wb", _SH_DENYWR);
+	if (tmp_aux != NULL)
+	{
+		setvbuf(tmp_aux, NULL, _IONBF, 0);
+	}
+
+	if (NULL == tmp_aux)
+	{
+		tmp_aux = stdout;
+	}
+
+	LOG_FILE = tmp_aux;
+
+	system("cmd /c start tail -F buzzpirathlp.log");
+	
+	fprintf(LOG_FILE, "bhl_asprog_clear_log END");
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned int size, unsigned char* bufferw, unsigned int size_wbuffer)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned char high = 0;
+	unsigned char low = 0;
 	unsigned int i = 0;
-	unsigned char* curr = NULL;
-	static const char* as_msg = "keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient";
+	unsigned int j = 0;
+
+	if (end_fast)
+	{
+		return 0;
+	}
+
+	fprintf(LOG_FILE, "\nbhl_asprog_spi_readwrite_no_cs size: 0x%X(%d) - bufferw: 0x%X(%d) - size_wbuffer: 0x%X(%d)\n", 
+		size, size, bufferw, bufferw, size_wbuffer, size_wbuffer);
+
+	if (size_wbuffer > 4096)
+	{
+		MessageBoxA(NULL, "size_wbuffer bigger", "size_wbuffer bigger", MB_OK | MB_TOPMOST | MB_ICONWARNING);
+		return 0;
+	}
+
+	if (size_wbuffer)
+	{
+		for (i = 0; i < size_wbuffer; i++)
+		{
+			fprintf(LOG_FILE, "0x%02X ", bufferw[i]);
+		}
+		fprintf(LOG_FILE, "-\n\n");
+	}
+
+	ComWriteByte(com_glb, BHL_SPI_WRITE_THEN_READ_NO_CS, 0);
+	ComWriteByte(com_glb, (size_wbuffer >> 8) & 0x000000FF, 0);
+	ComWriteByte(com_glb, size_wbuffer & 0x000000FF, 0);
+	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
+	ComWriteByte(com_glb, size & 0x000000FF, 0);
+
+	if (size_wbuffer)
+	{
+		ComWriteBuff(com_glb, bufferw, size_wbuffer, 0);
+	}
+
+	if (size)
+	{
+		do
+		{
+			spi_memaux[0] = 0;
+			ComReadByte(com_glb, spi_memaux, 0);
+			if (spi_memaux[0] != 1)
+			{
+				fprintf(LOG_FILE, "waiting for bus pirate...");
+			}
+		} while (spi_memaux[0] != 1);
+
+		ComReadBuff(com_glb, spi_memaux, size, 0);
+
+		fprintf(LOG_FILE, "\n0x%08X  ", 0);
+		for (i = 0; i < size; i++)
+		{
+			fprintf(LOG_FILE, "%02X ", spi_memaux[i]);
+			if ((i + 1) % 8 == 0)
+			{
+				fprintf(LOG_FILE, "  ");
+				for (j = i - 7; j < i; j++)
+				{
+					fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
+				}
+				if (i + 1 != size)
+				{
+					fprintf(LOG_FILE, "\n0x%08X  ", i);
+				}
+			}
+		}
+		j = i - (size % 8);
+		for (; j < i; j++)
+		{
+			fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
+		}
+		fprintf(LOG_FILE, "\n\n");
+	}
+
+	// FlushCOMIn(com_glb);
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_write(unsigned char* bufferw, unsigned int size_wbuffer)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned char high = 0;
+	unsigned char low = 0;
+	unsigned int i = 0;
+	
+	fprintf(LOG_FILE, "\nbhl_asprog_spi_write bufferw: 0x%X(%d) size_wbuffer: 0x%X(%d)\n", bufferw, bufferw, size_wbuffer, size_wbuffer);
+
+	if (size_wbuffer > 4096)
+	{
+		MessageBoxA(NULL, "size_wbuffer bigger", "size_wbuffer bigger", MB_OK | MB_TOPMOST | MB_ICONWARNING);
+		return 0;
+	}
+
+	for (i = 0; i < size_wbuffer; i++)
+	{
+		fprintf(LOG_FILE, "0x%02X ", bufferw[i]);
+	}
+	fprintf(LOG_FILE, "-\n\n");
+
+
+	high = (size_wbuffer >> 8) & 0x000000FF;
+	low = size_wbuffer & 0x000000FF;
+
+	ComWriteByte(com_glb, BHL_SPI_WRITE_THEN_READ, 0);
+	ComWriteByte(com_glb, high, 0);
+	ComWriteByte(com_glb, low, 0);
+	ComWriteByte(com_glb, 0, 0);
+	ComWriteByte(com_glb, 0, 0);
+
+	ComWriteBuff(com_glb, bufferw, size_wbuffer, 0);
+
+	do
+	{
+		spi_memaux[0] = 0;
+		ComReadByte(com_glb, spi_memaux, 0);
+	} while (spi_memaux[0] != 1);
+
+	FlushCOMIn(com_glb);
+
+	return 1;
+}
+
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_read(unsigned int size_read)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned char high = 0;
+	unsigned char low = 0;
+
+	fprintf(LOG_FILE, "\nbhl_asprog_spi_read size_read: 0x%X(%d)\n", size_read, size_read);
+
+	if (size_read > 4096)
+	{
+		MessageBoxA(NULL, "size_read bigger", "size_read bigger", MB_OK | MB_TOPMOST | MB_ICONWARNING);
+		return 0;
+	}
+
+	high = (size_read >> 8) & 0x000000FF;
+	low = size_read & 0x000000FF;
+
+	ComWriteByte(com_glb, BHL_SPI_WRITE_THEN_READ, 0);
+	ComWriteByte(com_glb, 0, 0);
+	ComWriteByte(com_glb, 0, 0);
+	ComWriteByte(com_glb, high, 0);
+	ComWriteByte(com_glb, low, 0);
+
+	do
+	{
+		spi_memaux[0] = 0;
+		ComReadByte(com_glb, spi_memaux, 0);
+	} while (spi_memaux[0] != 1);
+
+	ComReadBuff(com_glb, spi_memaux, size_read, 0);
+
+	FlushCOMIn(com_glb);
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
+	const char* com_name, 
+	unsigned int power, 
+	unsigned int pullups, 
+	unsigned int khz, 
+	unsigned int set_smphase_end,
+	unsigned int set_cke_act_to_idle,
+	unsigned int set_ckp_idle_high,
+	unsigned int set_out_3v3,
+	unsigned int set_cs_active_high)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned int phs = 0;
+	unsigned int speed = 0;
+	unsigned config = 0;
+
+	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - power: %d - pullups: %d - "
+		"khz: %d - set_smphase_end: %d - set_cke_act_to_idle: %d - set_ckp_idle_high: %d - set_out_3v3: %d - set_cs_active_high: %d\n", 
+		as_msg, com_name, power, pullups, 
+		khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high);
 
 	end_fast = 0;
 
-	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s power: %d pullups: %d khz: %d just_i2c_scanner: %d\n", as_msg, com_name, power, pullups, khz, just_i2c_scanner);
+	last_status = 0x69;
+
+	phs = BHL_PERIPHERAL_DISABLE_ALL;
 
 	if (pullups)
 	{
@@ -479,6 +806,116 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 	{
 		phs |= BHL_PERIPHERAL_PWR;
 	}
+
+	switch (khz)
+	{
+	case 30:
+		speed = BHL_SPI_30KHZ;
+		break;
+
+	case 125:
+		speed = BHL_SPI_125KHZ;
+		break;
+
+	case 250:
+		speed = BHL_SPI_250KHZ;
+		break;
+
+	default:
+		return 0;
+		break;
+	}
+
+	config = BHL_SPI_CONF_DEFAULTS | BHL_SPI_CONF_CKE_ACT_TO_IDLE;
+	if (set_out_3v3)
+	{
+		config |= BHL_SPI_CONF_OUT_3V3;
+	}
+
+	if (!bhl_com_create(com_name))
+	{
+		return 0;
+	}
+
+	if (NULL == spi_memaux)
+	{
+		spi_memaux = calloc(0x1000, 30000);
+		if (NULL == spi_memaux)
+		{
+			MessageBoxA(NULL, "ERROR SPI MEMAUX ALLOC", "ERROR SPI MEMAUX ALLOC", MB_OK | MB_TOPMOST | MB_ICONWARNING);
+			bhl_com_close();
+			return 0;
+		}
+	}
+
+	Sleep(500);
+	bhl_enter_raw_bitbang();
+	fprintf(LOG_FILE, "Entering SPI mode\n");
+	bhl_enter_bin_spi();
+	fprintf(LOG_FILE, "enabling PHS (PULL-UPS and POWER)...\n");
+	phs |= BHL_PERIPHERAL_CS;
+	fprintf(LOG_FILE, "phs: 0x%X\n", phs);
+	bhl_set_peripherals(phs);
+	fprintf(LOG_FILE, "speed: 0x%X\n", speed);
+	ComWriteByte(com_glb, speed, 0);
+	fprintf(LOG_FILE, "config: 0x%X\n", config);
+	ComWriteByte(com_glb, config, 0);
+	fprintf(LOG_FILE, "cs: 0x%X\n", BHL_SPI_CS_ACTIVE_HIGH);
+	ComWriteByte(com_glb, BHL_SPI_CS_ACTIVE_HIGH, 0);
+	Sleep(200);
+	FlushCOMIn(com_glb);
+
+	return 1;
+}
+
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_close(void)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	fprintf(LOG_FILE, "bhl_asprog_spi_close\n");
+
+	if (NULL != com_glb)
+	{
+		bhl_hard_reset();
+		bhl_com_close();
+		com_glb = NULL;
+	}
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+	unsigned int speed = 0;
+	unsigned int phs = 0;
+	unsigned i2c_detected = 0;
+	unsigned int retf = 0;
+	unsigned int i = 0;
+	unsigned char* curr = NULL;
+
+	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - power: %d - pullups: %d - "
+		"khz: %d just_i2c_scanner: %d\n", 
+		as_msg, com_name, power, pullups, 
+		khz, just_i2c_scanner);
+
+	//__debugbreak();
+
+	end_fast = 0;
+
+	phs = BHL_PERIPHERAL_DISABLE_ALL;
+
+	if (pullups)
+	{
+		phs |= BHL_PERIPHERAL_PULLUPS;
+	}
+
+	if (power)
+	{
+		phs |= BHL_PERIPHERAL_PWR;
+	}
+
+	speed = BHL_I2C_50KHZ;
 
 	switch (khz)
 	{
@@ -521,7 +958,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 	bhl_enter_bin_i2c();
 	fprintf(LOG_FILE, "Setting I2C speed %d khz\n", khz);
 	bhl_i2c_speed(speed);
-	fprintf(LOG_FILE, "enabling PULL-UPS and POWER...\n");
+	fprintf(LOG_FILE, "enabling PHS (PULL-UPS and POWER)...\n");
 	bhl_set_peripherals(phs);
 	Sleep(200);
 
