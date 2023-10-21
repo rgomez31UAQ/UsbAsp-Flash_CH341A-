@@ -10,20 +10,32 @@ uses
   Classes, SysUtils, basehw, msgstr, utilfunc, Dialogs;
 
 type
-  TBhlI2CInit        = function(com_name: pchar; power: integer; pullups: integer; khz: integer; just_i2c_scanner: integer): integer; stdcall;
-  TBhlI2CClose       = function:integer; stdcall;
-  TBhlI2CGetMemaux   = function:pbyte; stdcall;
-  TBhlI2CReadWrite   = function(devaddr: integer; bufflen: integer; buffer: PByteArray; length: integer): integer; stdcall;
-  TBhlI2CStart       = function:integer; stdcall;
-  TBhlI2CStop        = function:integer; stdcall;
-  TBhlI2CReadByte    = function:integer; stdcall;
-  TBhlI2CWriteByte   = function(byte_val: integer): integer; stdcall;
+  TBhlClearLog           = function:integer; stdcall;
+
+  TBhlI2CInit            = function(com_name: pchar; power: integer; pullups: integer; khz: integer; just_i2c_scanner: integer): integer; stdcall;
+  TBhlI2CClose           = function:integer; stdcall;
+  TBhlI2CGetMemaux       = function:pbyte; stdcall;
+  TBhlI2CReadWrite       = function(devaddr: integer; bufflen: integer; buffer: PByteArray; length: integer): integer; stdcall;
+  TBhlI2CStart           = function:integer; stdcall;
+  TBhlI2CStop            = function:integer; stdcall;
+  TBhlI2CReadByte        = function:integer; stdcall;
+  TBhlI2CWriteByte       = function(byte_val: integer): integer; stdcall;
+
+  TBhlSPIInit            = function(com_name: pchar; power: integer; pullups: integer; khz: integer; set_smphase_end: integer; set_cke_act_to_idle: integer; set_ckp_idle_high: integer; set_out_3v3: integer; set_cs_active_high: integer) : integer; stdcall;
+  TBhlSPIClose           = function:integer; stdcall;
+  TBhlSPIReadWriteNoCs   = function(size: integer; bufferw: PByteArray; size_wbuffer: integer): integer; stdcall;
+  TBhlSPICsLow           = function: integer; stdcall;
+  TBhlSPICsHigh          = function: integer; stdcall;
+  TBhlSPIGetMemaux   = function:pbyte; stdcall;
 { TBuzzpiratHardware }
 
 TBuzzpiratHardware = class(TBaseHardware)
 private
   FDevOpened: boolean;
   FStrError: string;
+
+  BhlClearLog: TBhlClearLog;
+
   BhlI2CInit: TBhlI2CInit;
   BhlI2CClose: TBhlI2CClose;
   BhlI2CGetMemaux: TBhlI2CGetMemaux;
@@ -32,6 +44,13 @@ private
   BhlI2CStop: TBhlI2CStop;
   BhlI2CReadByte: TBhlI2CReadByte;
   BhlI2CWriteByte: TBhlI2CWriteByte;
+
+  BhlSPIInit: TBhlSPIInit;
+  BhlSPIClose: TBhlSPIClose;
+  BhlSPIReadWriteNoCs: TBhlSPIReadWriteNoCs;
+  BhlSPICsLow: TBhlSPICsLow;
+  BhlSPICsHigh: TBhlSPICsHigh;
+  BhlSPIGetMemaux: TBhlSPIGetMemaux;
 
 public
   constructor Create;
@@ -96,16 +115,15 @@ var Handle: THandle;
   i2c_info: string;
   len: integer;
   FCOMPort: string;
+  set_smphase_end: integer;
+  set_cke_act_to_idle: integer;
+  set_ckp_idle_high: integer;
+  set_out_3v3: integer;
+  set_cs_active_high: integer;
 begin
   if FDevOpened then DevClose;
 
   FDevOpened := false;
-
-  if MainForm.RadioI2C.Checked = false then
-  begin
-    LogPrint('only I2C is supported yet');
-    Exit(false);
-  end;
 
   FCOMPort := main.Buzzpirat_COMPort;
 
@@ -118,6 +136,8 @@ begin
   Handle := LoadLibrary('buzzpirathlp.dll');
   if Handle <> 0 then
   begin
+    BhlClearLog          := TBhlClearLog(GetProcAddress(Handle, 'bhl_asprog_clear_log'));
+
     BhlI2CInit           := TBhlI2CInit(GetProcAddress(Handle, 'bhl_asprog_i2c_init'));
     BhlI2CClose          := TBhlI2CClose(GetProcAddress(Handle, 'bhl_asprog_i2c_close'));
     BhlI2CGetMemaux      := TBhlI2CGetMemaux(GetProcAddress(Handle, 'bhl_asprog_i2c_get_memaux'));
@@ -126,9 +146,18 @@ begin
     BhlI2CStop           := TBhlI2CStop(GetProcAddress(Handle, 'bhl_asprog_i2c_stop'));
     BhlI2CReadByte       := TBhlI2CReadByte(GetProcAddress(Handle, 'bhl_asprog_i2c_read_byte'));
     BhlI2CWriteByte      := TBhlI2CWriteByte(GetProcAddress(Handle, 'bhl_asprog_i2c_write_byte'));
+
+    BhlSPIInit           := TBhlSPIInit(GetProcAddress(Handle, 'bhl_asprog_spi_init'));
+    BhlSPIClose          := TBhlSPIClose(GetProcAddress(Handle, 'bhl_asprog_spi_close'));
+    BhlSPIReadWriteNoCs  := TBhlSPIReadWriteNoCs(GetProcAddress(Handle, 'bhl_asprog_spi_readwrite_no_cs'));
+    BhlSPICsLow          := TBhlSPICsLow(GetProcAddress(Handle, 'bhl_asprog_spi_cs_low'));
+    BhlSPICsHigh         := TBhlSPICsHigh(GetProcAddress(Handle, 'bhl_asprog_spi_cs_high'));
+    BhlSPIGetMemaux      := TBhlSPIGetMemaux(GetProcAddress(Handle, 'bhl_asprog_spi_get_memaux'));
     if (BhlI2CInit = nil) or (BhlI2CClose = nil) or (BhlI2CGetMemaux = nil) or
     (BhlI2CReadWrite = nil) or (BhlI2CStart = nil) or (BhlI2CStop = nil) or
-    (BhlI2CReadByte = nil) or (BhlI2CWriteByte = nil) then
+    (BhlI2CReadByte = nil) or (BhlI2CWriteByte = nil) or (BhlSPIInit = nil) or
+    (BhlSPIClose = nil) or  (BhlSPIReadWriteNoCs = nil) or  (BhlSPICsLow = nil) or
+    (BhlSPICsHigh = nil) or (BhlSPIGetMemaux = nil) or (BhlClearLog = nil) then
     begin
        FStrError:= 'buzzpirathlp.dll bad symbols';
        Exit(false);
@@ -140,26 +169,10 @@ begin
        Exit(false);
   end;
 
-  just_i2c_scanner := 0;
-  khz := 0;
+  if MainForm.ClearBuzzlogMenuItem.Checked then  BhlClearLog();
+
   pullups := 0;
   power := 0;
-
-  if MainForm.MenuBuzzpiratI2C5KHz.Checked then
-  begin
-       LogPrint('5khz');
-       khz := 5;
-  end
-  else if MainForm.MenuBuzzpiratI2C50KHz.Checked then
-  begin
-       LogPrint('50khz');
-       khz := 50;
-  end
-  else if MainForm.MenuBuzzpiratI2C100KHz.Checked then
-  begin
-       LogPrint('100khz');
-       khz := 100;
-  end;
 
   if MainForm.MenuBuzzpiratPower.Checked then
   begin
@@ -173,41 +186,116 @@ begin
        pullups := 1;
   end;
 
-  if MainForm.MenuBuzzpiratJustI2CScan.Checked then
+  khz := 0;
+
+  if MainForm.RadioI2C.Checked then
   begin
-       LogPrint('JUST I2C SCANNER');
-       just_i2c_scanner := 1;
+    just_i2c_scanner := 0;
+
+    if MainForm.MenuBuzzpiratI2C5KHz.Checked then
+    begin
+         LogPrint('5khz');
+         khz := 5;
+    end
+    else if MainForm.MenuBuzzpiratI2C50KHz.Checked then
+    begin
+         LogPrint('50khz');
+         khz := 50;
+    end
+    else if MainForm.MenuBuzzpiratI2C100KHz.Checked then
+    begin
+         LogPrint('100khz');
+         khz := 100;
+    end;
+
+    if MainForm.MenuBuzzpiratJustI2CScan.Checked then
+    begin
+         LogPrint('JUST I2C SCANNER');
+         just_i2c_scanner := 1;
+    end;
+
+    LogPrint('keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient');
+
+    if BhlI2CInit(PChar(FCOMPort), power, pullups, khz, just_i2c_scanner) <> 1 then
+    begin
+      LogPrint('I2C Init fail');
+      Exit(false);
+    end;
+
+    if just_i2c_scanner = 1 then
+    begin
+      memaux := BhlI2CGetMemaux();
+
+      len := 0;
+      while memaux[len] <> 0 do
+          Inc(len);
+      SetString(i2c_info, PChar(memaux), len);
+      ShowMessage(i2c_info);
+      LogPrint(i2c_info);
+      BhlI2CClose();
+      Exit(false);
+    end;
+
+    FDevOpened := true;
+    Exit(true);
   end;
 
-  LogPrint('keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient');
-
-  if BhlI2CInit(PChar(FCOMPort), power, pullups, khz, just_i2c_scanner) <> 1 then
+  if MainForm.RadioSPI.Checked then
   begin
-    LogPrint('I2C Init fail');
-    Exit(false);
+    set_smphase_end := 0;
+    set_cke_act_to_idle := 0;
+    set_ckp_idle_high := 0;
+    set_out_3v3 := 0;
+    set_cs_active_high := 0;
+
+    if MainForm.MenuBuzzpiratSPI30KHz.Checked then
+    begin
+         LogPrint('30khz');
+         khz := 30;
+    end
+    else if MainForm.MenuBuzzpiratSPI125KHz.Checked then
+    begin
+         LogPrint('125khz');
+         khz := 125;
+    end
+    else if MainForm.MenuBuzzpiratSPI250KHz.Checked then
+    begin
+         LogPrint('250khz');
+         khz := 250;
+    end;
+
+    if MainForm.MenuBuzzpiratSPINormal.Checked then
+    begin
+         LogPrint('out 3v3');
+         set_out_3v3 := 1;
+    end
+    else
+    begin
+      LogPrint('out Open Drain(HiZ)');
+    end;
+
+    if BhlSPIInit(PChar(FCOMPort), power, pullups, khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high) <> 1 then
+    begin
+      LogPrint('SPI Init fail');
+      Exit(false);
+    end;
+
+    FDevOpened := true;
+    Exit(true);
   end;
 
-  if just_i2c_scanner = 1 then
-  begin
-    memaux := BhlI2CGetMemaux();
-
-    len := 0;
-    while memaux[len] <> 0 do
-        Inc(len);
-    SetString(i2c_info, PChar(memaux), len);
-    ShowMessage(i2c_info);
-    LogPrint(i2c_info);
-    BhlI2CClose();
-    Exit(false);
-  end;
-
-  FDevOpened := true;
-  Result := true;
+  LogPrint('Not Implemented Yet');
+  Exit(false);
 end;
 
 procedure TBuzzpiratHardware.DevClose;
 begin
-  if FDevOpened then BhlI2CClose();
+  if FDevOpened then
+  begin
+    BhlI2CClose();
+    BhlSPIClose();
+  end;
+
   FDevOpened := false;
 end;
 
@@ -215,43 +303,66 @@ end;
 //SPI___________________________________________________________________________
 
 function TBuzzpiratHardware.SPIInit(speed: integer): boolean;
-var buff: byte;
 begin
   if not FDevOpened then Exit(false);
-
-  LogPrint('Not Implemented Yet');
-  Exit(false);
 end;
 
 procedure TBuzzpiratHardware.SPIDeinit;
-var buff: byte;
 begin
   if not FDevOpened then Exit;
-
-  LogPrint('Not Implemented Yet');
-  Exit;
 end;
 
 function TBuzzpiratHardware.SPIRead(CS: byte; BufferLen: integer; var buffer: array of byte): integer;
-var buff:  byte;
-    bytes: integer;
-const chunk = 64;
+var
+  sMessage: pbyte;
+  i: Integer;
 begin
   if not FDevOpened then Exit(-1);
 
-  LogPrint('Not Implemented Yet');
-  Exit(-1);
+  if BufferLen > 0 then FillChar(buffer, BufferLen - 1, 105);
+
+  if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
+  begin
+    LogPrint('Error SPIRead BhlSPIReadWriteNoCs');
+    Exit(-1);
+  end;
+
+  sMessage := BhlSPIGetMemaux();
+
+  for i := 0 to BufferLen - 1 do
+    buffer[i] := sMessage[i];
+  result := BufferLen;
+
+  if CS = 0 then
+  begin
+    BhlSPICsLow();
+  end
+  else
+  begin
+    BhlSPICsHigh();
+  end;
 end;
 
 function TBuzzpiratHardware.SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer;
-var buff: byte;
-    bytes: integer;
-const chunk = 256;
 begin
   if not FDevOpened then Exit(-1);
 
-  LogPrint('Not Implemented Yet');
-  Exit(-1);
+  if CS = 0 then
+  begin
+    BhlSPICsLow();
+  end
+  else
+  begin
+    BhlSPICsHigh();
+  end;
+
+  if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
+  begin
+    LogPrint('Error SPIWrite BhlSPIReadWriteNoCs');
+    Exit(-1);
+  end;
+
+  result := BufferLen;
 end;
 
 //i2c___________________________________________________________________________

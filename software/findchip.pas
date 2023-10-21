@@ -72,14 +72,20 @@ begin
                begin
                  cs := UTF16ToUTF8(ChipNode.Attributes.GetNamedItem('id').NodeValue); //id
                  if Upcase(cs) = Upcase(chipid) then
+                 begin
                    ChipSearchForm.ListBoxChips.Items.Append(UTF16ToUTF8(ChipNode.NodeName)+' ('+ UTF16ToUTF8(Item[j].NodeName) +')');
+                   LogPrint(UTF16ToUTF8(ChipNode.NodeName)+' ('+ UTF16ToUTF8(Item[j].NodeName) +')');
+                 end;
                end;
            end
            else
            begin
              cs := UTF16ToUTF8(ChipNode.NodeName); //Чип
              if pos(Upcase(chipname), Upcase(cs)) > 0 then
+             begin
                ChipSearchForm.ListBoxChips.Items.Append(cs+' ('+ UTF16ToUTF8(Item[j].NodeName) +')');
+               LogPrint(cs+' ('+ UTF16ToUTF8(Item[j].NodeName) +')');
+             end;
            end;
 
          end;

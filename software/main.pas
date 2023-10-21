@@ -98,10 +98,17 @@ type
     ScriptsMenuItem: TMenuItem;
     CreditsMenuItem: TMenuItem;
     DebugconsoleMenuItem: TMenuItem;
+    ListcomportsMenuItem: TMenuItem;
     MenuItemHardware: TMenuItem;
     MenuBuzzpirat: TMenuItem;
     MenuBuzzpiratPullups: TMenuItem;
+    ClearBuzzlogMenuItem: TMenuItem;
     MenuBuzzpiratPower: TMenuItem;
+    MenuBuzzpiratSPINormal: TMenuItem;
+    MenuBuzzpiratSPIHiz: TMenuItem;
+    MenuBuzzpiratSPI250KHz: TMenuItem;
+    MenuBuzzpiratSPI125KHz: TMenuItem;
+    MenuBuzzpiratSPI30KHz: TMenuItem;
     MenuBuzzpiratI2CClock: TMenuItem;
     MenuBuzzpiratI2C100KHz: TMenuItem;
     MenuBuzzpiratI2C50KHz: TMenuItem;
@@ -199,6 +206,7 @@ type
     procedure ScriptsMenuItemClick(Sender: TObject);
     procedure CreditsMenuItemClick(Sender: TObject);
     procedure DebugconsoleMenuItemClick(Sender: TObject);
+    procedure ListcomportsMenuItemClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure StartAddressEditChange(Sender: TObject);
     procedure StartAddressEditKeyPress(Sender: TObject; var Key: char);
@@ -2761,6 +2769,11 @@ begin
   credits := 'nofeletru https://github.com/nofeletru, Dreg @therealdreg https://github.com/therealdreg';
   LogPrint(credits);
   ShowMessage(credits);
+end;
+
+procedure TMainForm.ListcomportsMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start cmd /k mode', []);
 end;
 
 procedure TMainForm.SpeedButton1Click(Sender: TObject);
