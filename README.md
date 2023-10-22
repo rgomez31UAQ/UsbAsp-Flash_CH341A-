@@ -2,8 +2,9 @@
 
 AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C, MicroWire. Supports Buzzpirat, Bus Pirate, CH341a, UsbAsp, AVRISP(LUFA), Arduino & FT232H
 
-
 ![spiex](assets/spiex.png)
+
+**WARNING**: While the Bus Pirate part is operational, the GUI part of the AS Programmer remains frozen; this is normal. Refer to the debug console and be patient... I will be enhancing this mod over time (integration included)
 
 # Download
 https://github.com/therealdreg/asprogrammer-dregmod/releases
