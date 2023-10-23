@@ -6,6 +6,10 @@ AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C
 
 **WARNING**: While the Bus Pirate part is operational, the GUI part of the AS Programmer remains frozen; this is normal. Refer to the debug console and be patient... I will be enhancing this mod over time (integration included)
 
+**WARNING**: Virtual Machines (VM) and/or USB Hubs can cause problems. It is advisable to ALWAYS use a native OS, and connect the Bus Pirate directly to a USB port
+
+**WARNING**: I recommend using a speed of approximately 100kHz for each protocol as the maximum, since the quality of the cables is important and I do not trust that the length of yours is short, especially if there is an adapter to clips, etc. The longer the cable and the more adapters there are, coupled with lower voltage, the more you will need to use a lower speed
+
 # Download
 https://github.com/therealdreg/asprogrammer-dregmod/releases
 
