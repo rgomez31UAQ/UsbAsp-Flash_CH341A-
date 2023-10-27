@@ -19,12 +19,21 @@ typedef struct
 	HANDLE handle;
 } COMOP_t;
 
+typedef enum
+{
+	LSTP_NONE = 0,
+	LSTP_SPI,
+	LSTP_I2C
+} last_prot_t;
+
 COMOP_t* volatile com_glb = NULL;
 unsigned char* volatile i2c_memaux = NULL;
 unsigned char* volatile spi_memaux = NULL;
 extern unsigned int volatile end_fast;
+unsigned int volatile reset_once = 0;
+last_prot_t volatile last_prot = LSTP_NONE;
 
-const char* const as_msg = "keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient";
+const char* const as_msg = "keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient. If bus pirate console freezes(~2 mins without output)/crash : close this program, reconnect USB port and try again.";
 
 
 BOOL CreateCOM(COMOP_t* com, const char* name)
@@ -524,16 +533,15 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_cs_low(void)
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 	unsigned char status = 0;
 
-	/*
+	fprintf(LOG_FILE, "bhl_asprog_spi_cs_low\n");
+
 	if (last_status == 0)
 	{
+		fprintf(LOG_FILE, "skipping...\n");
 		return 1;
 	}
-	*/
 
 	last_status = 0;
-
-	fprintf(LOG_FILE, "bhl_asprog_spi_cs_low\n");
 
 	ComWriteByte(com_glb, BHL_SPI_CS_ACTIVE_LOW, 0);
 	ComReadByte(com_glb, &status, 0);
@@ -546,16 +554,15 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_cs_high(void)
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 	unsigned char status = 0;
 
-	/*
+	fprintf(LOG_FILE, "bhl_asprog_spi_cs_high\n");
+
 	if (last_status == 1)
 	{
+		fprintf(LOG_FILE, "skipping...\n");
 		return 1;
 	}
-	*/
 
 	last_status = 1;
-
-	fprintf(LOG_FILE, "bhl_asprog_spi_cs_high\n");
 
 	ComWriteByte(com_glb, BHL_SPI_CS_ACTIVE_HIGH, 0);
 	ComReadByte(com_glb, &status, 0);
@@ -649,6 +656,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 	{
 		do
 		{
+			if (end_fast)
+			{
+				return 0;
+			}
 			spi_memaux[0] = 0;
 			ComReadByte(com_glb, spi_memaux, 0);
 			if (spi_memaux[0] != 1)
@@ -724,11 +735,26 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_write(unsigned char* buff
 
 	do
 	{
+		if (end_fast)
+		{
+			return 0;
+		}
 		spi_memaux[0] = 0;
 		ComReadByte(com_glb, spi_memaux, 0);
 	} while (spi_memaux[0] != 1);
 
 	FlushCOMIn(com_glb);
+
+	return 1;
+}
+
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_reset_once(unsigned int setf)
+{
+#pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
+
+	fprintf(LOG_FILE, "\nreset once: %d\n", setf);
+
+	reset_once = setf;
 
 	return 1;
 }
@@ -759,6 +785,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_read(unsigned int size_re
 
 	do
 	{
+		if (end_fast)
+		{
+			return 0;
+		}
 		spi_memaux[0] = 0;
 		ComReadByte(com_glb, spi_memaux, 0);
 	} while (spi_memaux[0] != 1);
@@ -795,6 +825,13 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 
 	last_status = 0x69;
 
+	if (reset_once && last_prot == LSTP_SPI && NULL != com_glb)
+	{
+		return 1;
+	}
+
+	last_prot = LSTP_SPI;
+
 	phs = BHL_PERIPHERAL_DISABLE_ALL;
 
 	if (pullups)
@@ -819,6 +856,26 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 
 	case 250:
 		speed = BHL_SPI_250KHZ;
+		break;
+
+	case 1:
+		speed = BHL_SPI_1MHZ;
+		break;
+
+	case 2:
+		speed = BHL_SPI_2MHZ;
+		break;
+
+	case 26:
+		speed = BHL_SPI_2P6MHZ;
+		break;
+
+	case 4:
+		speed = BHL_SPI_4MHZ;
+		break;
+
+	case 8:
+		speed = BHL_SPI_8MHZ;
 		break;
 
 	default:
@@ -903,6 +960,13 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 
 	end_fast = 0;
 
+	if (reset_once && last_prot == LSTP_I2C && NULL != com_glb && !just_i2c_scanner)
+	{
+		return 1;
+	}
+
+	last_prot = LSTP_I2C;
+
 	phs = BHL_PERIPHERAL_DISABLE_ALL;
 
 	if (pullups)
@@ -931,6 +995,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 		speed = BHL_I2C_100KHZ;
 		break;
 
+	case 400:
+		speed = BHL_I2C_400KHZ;
+		break;
+
 	default:
 		return 0;
 		break;
@@ -957,8 +1025,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 	fprintf(LOG_FILE, "Entering i2c mode\n");
 	bhl_enter_bin_i2c();
 	fprintf(LOG_FILE, "Setting I2C speed %d khz\n", khz);
+	fprintf(LOG_FILE, "speed: 0x%X\n", speed);
 	bhl_i2c_speed(speed);
 	fprintf(LOG_FILE, "enabling PHS (PULL-UPS and POWER)...\n");
+	fprintf(LOG_FILE, "phs: 0x%X\n", phs);
 	bhl_set_peripherals(phs);
 	Sleep(200);
 
@@ -1027,9 +1097,16 @@ BUZZPIRATHLP_API unsigned char* __stdcall bhl_asprog_i2c_get_memaux(void)
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int devaddr, unsigned int size, unsigned char* buffwr, unsigned int size_buffwr)
 {
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
-	unsigned char receive_buf[10] = { 0 };
+	unsigned char high = 0;
+	unsigned char low = 0;
 	unsigned int i = 0;
 	unsigned int j = 0;
+	unsigned char recv[100] = { 0 };
+
+	if (end_fast)
+	{
+		return 0;
+	}
 
 	fprintf(LOG_FILE, "\ndevaddr: 0x%X(%d) size: 0x%X(%d) buffwr: 0x%X(%d) size_buffwr: 0x%X(%d)\n", 
 		devaddr, devaddr, 
@@ -1037,97 +1114,74 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int de
 		buffwr, buffwr, 
 		size_buffwr, size_buffwr);
 
-	if (end_fast)
+	if (size_buffwr > 4096)
 	{
+		MessageBoxA(NULL, "size_wbuffer bigger", "size_buffwr bigger", MB_OK | MB_TOPMOST | MB_ICONWARNING);
 		return 0;
 	}
 
-	if (size_buffwr > 0)
-	{ 
+	if (size_buffwr)
+	{
 		for (i = 0; i < size_buffwr; i++)
 		{
 			fprintf(LOG_FILE, "0x%02X ", buffwr[i]);
 		}
 		fprintf(LOG_FILE, "-\n\n");
-
-
-		unsigned char buff[] = { BHL_I2C_SEND_START, BHL_I2C_BULK_WRITE, devaddr & 0xFFFFFFFE };
-	
-
-		ComWriteBuff(com_glb, buff, 3, 0);
-		ComReadBuff(com_glb, receive_buf, 4, 0);
-
-		unsigned char buff2[] = { BHL_I2C_BULK_WRITE, 0 };
-
-
-		for (i = 0; i < size_buffwr; i++)
-		{
-			if (end_fast)
-			{
-				return 0;
-			}
-			buff2[1] = buffwr[i];
-			ComWriteBuff(com_glb, buff2, 2, 0);
-			ComReadBuff(com_glb, receive_buf, 3, 0);
-		}
-
-		if (size == 0)
-		{
-			ComWriteByte(com_glb, BHL_I2C_SEND_STOP, 0);
-			ComReadBuff(com_glb, receive_buf, 2, 0);
-		}
-		else
-		{
-			ComWriteByte(com_glb, BHL_I2C_SEND_START, 0);
-			ComReadBuff(com_glb, receive_buf, 2, 0);
-		}
 	}
 
-	if (size > 0)
+	ComWriteByte(com_glb, BHL_I2C_WRITE_THEN_READ, 0);
+	ComWriteByte(com_glb, ((size_buffwr + 1) >> 8) & 0x000000FF, 0);
+	ComWriteByte(com_glb, (size_buffwr + 1) & 0x000000FF, 0);
+	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
+	ComWriteByte(com_glb, size & 0x000000FF, 0);
+
+	ComWriteByte(com_glb, devaddr, 0);
+	if (size_buffwr)
 	{
-		unsigned char buff4[] = { BHL_I2C_BULK_WRITE, devaddr | 1 };
-		ComWriteBuff(com_glb, buff4, 2, 0);
-		ComReadBuff(com_glb, receive_buf, 3, 0);
-		fprintf(LOG_FILE, "\n");
+		ComWriteBuff(com_glb, buffwr, size_buffwr, 0);
+	}
+
+	do
+	{ 
+		*recv = 0x69;
+		ComReadByte(com_glb, &recv, 0);
+		if (*recv != 1)
+		{
+			fprintf(LOG_FILE, "waiting for bus pirate...");
+		}
+		if (end_fast)
+		{
+			return 0;
+		}
+	} while (*recv != 1);
+
+	if (size)
+	{
+		ComReadBuff(com_glb, i2c_memaux, size, 0);
+
+		fprintf(LOG_FILE, "\n0x%08X  ", 0);
 		for (i = 0; i < size; i++)
 		{
-			if (end_fast)
+			fprintf(LOG_FILE, "%02X ", i2c_memaux[i]);
+			if ((i + 1) % 8 == 0)
 			{
-				return 0;
-			}
-			if (i == size - 1)
-			{
-				receive_buf[0] = bhl_i2c_eepr_stop_bulk();
-			}
-			else
-			{
-				bhl_i2c_eepr_bulk_read_byte(receive_buf, BHL_I2C_SEND_ACK);
-			}
-			i2c_memaux[i] = receive_buf[0];
-			if (i % 8 == 0)
-			{
-				if (i > 0)
+				fprintf(LOG_FILE, "  ");
+				for (j = i - 7; j < i; j++)
 				{
-					fprintf(LOG_FILE, "  ");
-					for (j = i - 8; j < i; j++) // craaaap
-					{
-						fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
-					}
+					fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
 				}
-				fprintf(LOG_FILE, "\n0x%08X: ", i);
-			}
-			fprintf(LOG_FILE, "%02X ", receive_buf[0]);
-		}
-		if (size > 7)
-		{ // wtf craaaap
-			fprintf(LOG_FILE, "  ");
-			for (j = i - 8; j < i; j++)
-			{
-				fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
+				if (i + 1 != size)
+				{
+					fprintf(LOG_FILE, "\n0x%08X  ", i);
+				}
 			}
 		}
-		fprintf(LOG_FILE, "\n");
-
+		j = i - (size % 8);
+		for (; j < i; j++)
+		{
+			fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
+		}
+		fprintf(LOG_FILE, "\n\n");
 	}
 
 	return 1;

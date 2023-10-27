@@ -97,19 +97,27 @@ type
     MPHexEditorEx: TMPHexEditorEx;
     ScriptsMenuItem: TMenuItem;
     CreditsMenuItem: TMenuItem;
+    BzHelpMenuItem: TMenuItem;
     DebugconsoleMenuItem: TMenuItem;
     ListcomportsMenuItem: TMenuItem;
     MenuItemHardware: TMenuItem;
     MenuBuzzpirat: TMenuItem;
     MenuBuzzpiratPullups: TMenuItem;
+    MenuBuzzpiratResetEach: TMenuItem;
     ClearBuzzlogMenuItem: TMenuItem;
     MenuBuzzpiratPower: TMenuItem;
     MenuBuzzpiratSPINormal: TMenuItem;
     MenuBuzzpiratSPIHiz: TMenuItem;
+    MenuBuzzpiratSPI8MHz: TMenuItem;
+    MenuBuzzpiratSPI4MHz: TMenuItem;
+    MenuBuzzpiratSPI2P6MHz: TMenuItem;
+    MenuBuzzpiratSPI2MHz: TMenuItem;
+    MenuBuzzpiratSPI1MHz: TMenuItem;
     MenuBuzzpiratSPI250KHz: TMenuItem;
     MenuBuzzpiratSPI125KHz: TMenuItem;
     MenuBuzzpiratSPI30KHz: TMenuItem;
     MenuBuzzpiratI2CClock: TMenuItem;
+    MenuBuzzpiratI2C400KHz: TMenuItem;
     MenuBuzzpiratI2C100KHz: TMenuItem;
     MenuBuzzpiratI2C50KHz: TMenuItem;
     MenuBuzzpiratI2C5KHz: TMenuItem;
@@ -205,6 +213,7 @@ type
     procedure I2C_DevAddrChange(Sender: TObject);
     procedure ScriptsMenuItemClick(Sender: TObject);
     procedure CreditsMenuItemClick(Sender: TObject);
+    procedure BzHelpMenuItemClick(Sender: TObject);
     procedure DebugconsoleMenuItemClick(Sender: TObject);
     procedure ListcomportsMenuItemClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -2760,6 +2769,11 @@ end;
 procedure TMainForm.DebugconsoleMenuItemClick(Sender: TObject);
 begin
      ExecuteProcess('cmd.exe', '/c start tail -F buzzpirathlp.log', []);
+end;
+
+procedure TMainForm.BzHelpMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start https://github.com/therealdreg/asprogrammer-dregmod', []);
 end;
 
 procedure TMainForm.CreditsMenuItemClick(Sender: TObject);

@@ -14,6 +14,7 @@
 
 // http://dangerousprototypes.com/docs/Bitbang
 
+#define BHL_I2C_WRITE_THEN_READ        0x08
 #define BHL_PERIPHERAL_DISABLE_ALL     0x40
 #define BHL_PERIPHERAL_CS              0x41
 #define BHL_PERIPHERAL_AUX             0x42
@@ -86,8 +87,11 @@ BUZZPIRATHLP_API BOOL __stdcall bhl_i2c_eepr_write_byte_2byteaddr(unsigned int c
 BUZZPIRATHLP_API unsigned int __stdcall bhl_i2c_scan(unsigned char* detected_array);
 
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_clear_log(void);
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_reset_once(unsigned int setf);
+
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_close(void);
+
 BUZZPIRATHLP_API unsigned char* __stdcall bhl_asprog_i2c_get_memaux(void);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int devaddr, unsigned int size, unsigned char* buffwr, unsigned int size_buffwr);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_start(void);

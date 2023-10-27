@@ -11,6 +11,7 @@ uses
 
 type
   TBhlClearLog           = function:integer; stdcall;
+  TBhlResetOnce          = function(setf: integer): integer; stdcall;
 
   TBhlI2CInit            = function(com_name: pchar; power: integer; pullups: integer; khz: integer; just_i2c_scanner: integer): integer; stdcall;
   TBhlI2CClose           = function:integer; stdcall;
@@ -35,6 +36,7 @@ private
   FStrError: string;
 
   BhlClearLog: TBhlClearLog;
+  BhlResetOnce: TBhlResetOnce;
 
   BhlI2CInit: TBhlI2CInit;
   BhlI2CClose: TBhlI2CClose;
@@ -137,6 +139,7 @@ begin
   if Handle <> 0 then
   begin
     BhlClearLog          := TBhlClearLog(GetProcAddress(Handle, 'bhl_asprog_clear_log'));
+    BhlResetOnce         := TBhlResetOnce(GetProcAddress(Handle, 'bhl_asprog_reset_once'));
 
     BhlI2CInit           := TBhlI2CInit(GetProcAddress(Handle, 'bhl_asprog_i2c_init'));
     BhlI2CClose          := TBhlI2CClose(GetProcAddress(Handle, 'bhl_asprog_i2c_close'));
@@ -157,7 +160,8 @@ begin
     (BhlI2CReadWrite = nil) or (BhlI2CStart = nil) or (BhlI2CStop = nil) or
     (BhlI2CReadByte = nil) or (BhlI2CWriteByte = nil) or (BhlSPIInit = nil) or
     (BhlSPIClose = nil) or  (BhlSPIReadWriteNoCs = nil) or  (BhlSPICsLow = nil) or
-    (BhlSPICsHigh = nil) or (BhlSPIGetMemaux = nil) or (BhlClearLog = nil) then
+    (BhlSPICsHigh = nil) or (BhlSPIGetMemaux = nil) or (BhlClearLog = nil) or
+    (BhlResetOnce = nil) then
     begin
        FStrError:= 'buzzpirathlp.dll bad symbols';
        Exit(false);
@@ -170,6 +174,15 @@ begin
   end;
 
   if MainForm.ClearBuzzlogMenuItem.Checked then  BhlClearLog();
+
+  if MainForm.MenuBuzzpiratResetEach.Checked then
+  begin
+       BhlResetOnce(0);
+  end
+  else
+  begin
+      BhlResetOnce(1);
+  end;
 
   pullups := 0;
   power := 0;
@@ -206,6 +219,11 @@ begin
     begin
          LogPrint('100khz');
          khz := 100;
+    end
+    else if MainForm.MenuBuzzpiratI2C400KHz.Checked then
+    begin
+         LogPrint('400khz (not recommended)');
+         khz := 400;
     end;
 
     if MainForm.MenuBuzzpiratJustI2CScan.Checked then
@@ -214,7 +232,7 @@ begin
          just_i2c_scanner := 1;
     end;
 
-    LogPrint('keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient');
+    LogPrint('keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient. If bus pirate console freezes(~2 mins without output)/crash : close this program, reconnect USB port and try again.');
 
     if BhlI2CInit(PChar(FCOMPort), power, pullups, khz, just_i2c_scanner) <> 1 then
     begin
@@ -232,7 +250,7 @@ begin
       SetString(i2c_info, PChar(memaux), len);
       ShowMessage(i2c_info);
       LogPrint(i2c_info);
-      BhlI2CClose();
+      if MainForm.MenuBuzzpiratResetEach.Checked then BhlI2CClose();
       Exit(false);
     end;
 
@@ -262,6 +280,31 @@ begin
     begin
          LogPrint('250khz');
          khz := 250;
+    end
+    else if MainForm.MenuBuzzpiratSPI1MHz.Checked then
+    begin
+         LogPrint('1mhz (not recommended)');
+         khz := 1;
+    end
+    else if MainForm.MenuBuzzpiratSPI2MHz.Checked then
+    begin
+         LogPrint('2mhz (not recommended)');
+         khz := 2;
+    end
+    else if MainForm.MenuBuzzpiratSPI2P6MHz.Checked then
+    begin
+         LogPrint('2.6mhz (not recommended)');
+         khz := 26;
+    end
+    else if MainForm.MenuBuzzpiratSPI4MHz.Checked then
+    begin
+         LogPrint('4mhz (not recommended)');
+         khz := 4;
+    end
+    else if MainForm.MenuBuzzpiratSPI8MHz.Checked then
+    begin
+         LogPrint('8mhz (not recommended)');
+         khz := 8;
     end;
 
     if MainForm.MenuBuzzpiratSPINormal.Checked then
@@ -292,8 +335,11 @@ procedure TBuzzpiratHardware.DevClose;
 begin
   if FDevOpened then
   begin
-    BhlI2CClose();
-    BhlSPIClose();
+    if MainForm.MenuBuzzpiratResetEach.Checked then
+    begin
+         BhlI2CClose();
+         BhlSPIClose();
+    end;
   end;
 
   FDevOpened := false;
@@ -321,10 +367,24 @@ begin
 
   if BufferLen > 0 then FillChar(buffer, BufferLen - 1, 105);
 
-  if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
+  if (CS = 1) then
   begin
-    LogPrint('Error SPIRead BhlSPIReadWriteNoCs');
-    Exit(-1);
+    BhlSPICsLow();
+    if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
+    begin
+         LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:1)');
+         Exit(-1);
+    end;
+    BhlSPICsHigh();
+  end
+  else
+  begin
+      BhlSPICsLow();
+      if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
+      begin
+         LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:0)');
+         Exit(-1);
+      end;
   end;
 
   sMessage := BhlSPIGetMemaux();
@@ -332,34 +392,30 @@ begin
   for i := 0 to BufferLen - 1 do
     buffer[i] := sMessage[i];
   result := BufferLen;
-
-  if CS = 0 then
-  begin
-    BhlSPICsLow();
-  end
-  else
-  begin
-    BhlSPICsHigh();
-  end;
 end;
 
 function TBuzzpiratHardware.SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer;
 begin
   if not FDevOpened then Exit(-1);
 
-  if CS = 0 then
+  if (CS = 1) then
   begin
     BhlSPICsLow();
+    if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
+    begin
+         LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:1)');
+         Exit(-1);
+    end;
+    BhlSPICsHigh();
   end
   else
   begin
-    BhlSPICsHigh();
-  end;
-
-  if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
-  begin
-    LogPrint('Error SPIWrite BhlSPIReadWriteNoCs');
-    Exit(-1);
+      BhlSPICsLow();
+      if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
+      begin
+         LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:0)');
+         Exit(-1);
+      end;
   end;
 
   result := BufferLen;
