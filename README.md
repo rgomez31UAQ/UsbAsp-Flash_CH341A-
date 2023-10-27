@@ -4,11 +4,14 @@ AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C
 
 ![spiex](assets/spiex.png)
 
-**WARNING**: While the Bus Pirate part is operational, the GUI part of the AS Programmer remains frozen; this is normal. Refer to the debug console and be patient... I will be enhancing this mod over time (integration included)
+**WARNING**: While the Bus Pirate part is operational, the GUI part of the AS Programmer remains frozen; this is normal. Refer to the debug console and be patient... I will be enhancing this mod over time (integration included). If buzzpirat console freezes(~2 mins without output)/crash : close this program, reconnect USB port and try again
 
 **WARNING**: Virtual Machines (VM) and/or USB Hubs can cause problems. It is advisable to ALWAYS use a native OS, and connect the Bus Pirate directly to a USB port
 
 **WARNING**: I recommend using a speed of approximately 100kHz for each protocol as the maximum, since the quality of the cables is important and I do not trust that the length of yours is short, especially if there is an adapter to clips, etc. The longer the cable and the more adapters there are, coupled with lower voltage, the more you will need to use a lower speed
+
+**WARNING**: Firmware recommended: https://github.com/therealdreg/autobuspirateupgrade/blob/main/BPv3-bootloaderv4xtov45-update_fw-TEST%20Gabriel%20Smith%20JTAG%20Fix_ENG-v0.zip
+
 
 # Download
 https://github.com/therealdreg/asprogrammer-dregmod/releases
@@ -19,6 +22,84 @@ Only issues and/or PRs related to the buzzpirat & bus pirate function are accept
 - https://github.com/nofeletru/UsbAsp-flash/issues
 - https://github.com/nofeletru/UsbAsp-flash/discussions
 
+---
+
+# Example reading & writing microchip at24c256 i2c eeprom 5v
+
+## 1. Connect Buzzpirat to at24c256 chip
+
+Connect the 5V from the Buzzpirat to both VCC and VPU
+
+![clipsfi2c](assets/clipsfi2c.png)
+
+![twoschclipsfi2c](assets/twoschclipsfi2c.png)
+
+(THX TO David Sanchez & Mecanico for images)
+
+## 2. Click on Buzzpirat menu -> COM Port, Select Pull UPs ON
+
+Check the available COM ports by clicking on the "List Free COM Ports" menu
+
+![menuconfi2c](assets/menuconfi2c.png)
+
+## 3. Click on IC menu -> I2C -> _24Cxxx -> _24C256
+
+
+![i2cselectchip](assets/i2cselectchip.png)
+
+
+## 4. Press the "Read IC" button and wait patiently (the GUI will become unresponsive)
+
+
+![selectableeeprom.png](assets/selectableeeprom.png)
+
+
+## 5. I2C Scanner: Click on Buzzpirat Menu -> I2C -> Just I2C Scanner
+
+
+![justi2csel.png](assets/justi2csel.png)
+
+If nothing appears here, you have connected something incorrectly
+
+
+## 6. Press the "Read IC" button and wait patiently (the GUI will become unresponsive)
+
+![i2cscanfinresl.png](assets/i2cscanfinresl.png)
+
+---
+
+# Example reading & writing winbond 25q64 3v3 spi flash
+
+## 1. Connect Buzzpirat to at24c256 chip
+
+Connect the 3V3 from the Buzpirat to VCC 
+
+![winbondcntdiag](assets/winbondcntdiag.png)
+
+![realclips](assets/realclips.png)
+
+(THX TO David Sanchez & Mecanico for images)
+
+
+## 2. Click on SPI radio button
+
+![spibutton](assets/spibutton.png)
+
+## 3. Click on Read ID (wait patiently, the GUI will become unresponsive) and select W25Q64BV
+
+![readidbut](assets/readidbut.png)
+
+![correctwinbg](assets/correctwinbg.png)
+
+If nothing appears here, you have connected something incorrectly
+
+## 4. Press the "Read IC" button and wait patiently (~30 mins) (the GUI will become unresponsive)
+
+
+![spiex.png](assets/spiex.png)
+
+
+---
 
 # How to build & debug
 
