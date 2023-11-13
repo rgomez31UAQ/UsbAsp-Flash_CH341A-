@@ -17,34 +17,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "buzz_spi_flash_w25q64_3v3_t
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{190BA0FA-B674-41CF-8670-B01631129F70}.Debug|x64.ActiveCfg = Debug|x64
-		{190BA0FA-B674-41CF-8670-B01631129F70}.Debug|x64.Build.0 = Debug|x64
 		{190BA0FA-B674-41CF-8670-B01631129F70}.Debug|x86.ActiveCfg = Debug|Win32
 		{190BA0FA-B674-41CF-8670-B01631129F70}.Debug|x86.Build.0 = Debug|Win32
-		{190BA0FA-B674-41CF-8670-B01631129F70}.Release|x64.ActiveCfg = Release|x64
-		{190BA0FA-B674-41CF-8670-B01631129F70}.Release|x64.Build.0 = Release|x64
 		{190BA0FA-B674-41CF-8670-B01631129F70}.Release|x86.ActiveCfg = Release|Win32
 		{190BA0FA-B674-41CF-8670-B01631129F70}.Release|x86.Build.0 = Release|Win32
-		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Debug|x64.ActiveCfg = Debug|x64
-		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Debug|x64.Build.0 = Debug|x64
 		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Debug|x86.ActiveCfg = Debug|Win32
 		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Debug|x86.Build.0 = Debug|Win32
-		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Release|x64.ActiveCfg = Release|x64
-		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Release|x64.Build.0 = Release|x64
 		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Release|x86.ActiveCfg = Release|Win32
 		{85FC5889-23CA-490F-9452-29E6A8A0F137}.Release|x86.Build.0 = Release|Win32
-		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Debug|x64.ActiveCfg = Debug|x64
-		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Debug|x64.Build.0 = Debug|x64
 		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Debug|x86.ActiveCfg = Debug|Win32
 		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Debug|x86.Build.0 = Debug|Win32
-		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Release|x64.ActiveCfg = Release|x64
-		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Release|x64.Build.0 = Release|x64
 		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Release|x86.ActiveCfg = Release|Win32
 		{CB6DC8FE-2101-461D-8CAF-418D8863BDE1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection

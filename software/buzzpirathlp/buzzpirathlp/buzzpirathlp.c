@@ -40,17 +40,22 @@ BOOL CreateCOM(COMOP_t* com, const char* name)
 {
 	DCB my_dcb = { 0 };
 	COMMTIMEOUTS timeouts = { 0 };
+	static char wincomname[300] = { 0 };
 
-	if (com == NULL)
+	memset(wincomname, 0, sizeof(wincomname));
+
+	if (com == NULL || strlen(name) > 100) // craaap
 	{
 		return FALSE;
 	}
 
 	memset(com, 0, sizeof(*com));
 
-	com->handle = CreateFileA(name, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_ATTRIBUTE_NORMAL, 0);
+	sprintf(wincomname, "\\\\.\\%s", name);
+
+	com->handle = CreateFileA(wincomname, GENERIC_READ | GENERIC_WRITE, 0, 0, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_ATTRIBUTE_NORMAL, 0);
 	if (com->handle == INVALID_HANDLE_VALUE) {
-		fprintf(LOG_FILE, "Error Opening Serial Port\n");
+		fprintf(LOG_FILE, "Error Opening Serial Port: %s\n", wincomname);
 		return FALSE;
 	}
 
@@ -62,7 +67,7 @@ BOOL CreateCOM(COMOP_t* com, const char* name)
 	my_dcb.Parity = NOPARITY;
 
 	if (!SetCommState(com->handle, &my_dcb)) {
-		fprintf(LOG_FILE, "Error setting up serial port\n");
+		fprintf(LOG_FILE, "Error setting up serial port: %s\n", wincomname);
 		return FALSE;
 	}
 
