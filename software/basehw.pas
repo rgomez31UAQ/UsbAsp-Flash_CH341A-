@@ -29,6 +29,7 @@ public
   procedure SPIDeinit; virtual; abstract;
   function SPIRead(CS: byte; BufferLen: integer; var buffer: array of byte): integer; virtual; abstract;
   function SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer; virtual; abstract;
+  function SPIWriteRead(CS: byte; WBufferLen: integer; WBuffer: array of byte;RBufferLen: integer; var RBuffer: array of byte): integer; virtual; abstract;
 
   //I2C
   procedure I2CInit; virtual; abstract;

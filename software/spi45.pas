@@ -87,8 +87,7 @@ end;
 function UsbAsp45_ReadSR(var sreg: byte): integer;
 begin
   sreg := $D7; //57H Legacy
-  SPIWrite(0, 1, sreg);
-  result := SPIRead(1, 1, sreg);
+  result := SPIReadWrite(1, 0, 1, sreg, 1, sreg);
 end;
 
 //Возвращает сколько байт записали
@@ -129,8 +128,7 @@ begin
 
   buffer[3] := 0;
 
-  SPIWrite(0, 8, buffer);
-  result := SPIRead(1, bufflen, buffer);
+  result := SPIReadWrite(1, 0, bufflen, buffer, 8, buffer);
 end;
 
 end.

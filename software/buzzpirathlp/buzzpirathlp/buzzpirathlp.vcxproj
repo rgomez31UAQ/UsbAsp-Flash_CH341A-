@@ -108,7 +108,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\ &amp;&amp; xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\..\</Command>
+      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -133,7 +133,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\ &amp;&amp; xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\..\</Command>
+      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -154,7 +154,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\ &amp;&amp; xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\..\</Command>
+      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -179,7 +179,7 @@
       <EnableUAC>false</EnableUAC>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\ &amp;&amp; xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\..\</Command>
+      <Command>xcopy /y $(TargetDir)buzzpirathlp.dll $(TargetDir)..\..\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

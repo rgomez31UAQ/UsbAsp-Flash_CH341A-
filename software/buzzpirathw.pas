@@ -65,6 +65,7 @@ public
   //spi
   function SPIRead(CS: byte; BufferLen: integer; var buffer: array of byte): integer; override;
   function SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer; override;
+  function SPIWriteRead(CS: byte; WBufferLen: integer; WBuffer: array of byte; RBufferLen: integer; var RBuffer: array of byte): integer; override;
   function SPIInit(speed: integer): boolean; override;
   procedure SPIDeinit; override;
 
@@ -358,6 +359,31 @@ begin
   if not FDevOpened then Exit;
 end;
 
+function TBuzzpiratHardware.SPIWriteRead(CS: byte; WBufferLen: integer; WBuffer: array of byte; RBufferLen: integer; var RBuffer: array of byte): integer;
+var
+  sMessage: pbyte;
+  i: Integer;
+begin
+  if not FDevOpened then Exit(-1);
+
+  if RBufferLen > 0 then FillChar(RBuffer, RBufferLen - 1, 105);
+
+  BhlSPICsLow();
+  if BhlSPIReadWriteNoCs(RBufferLen, @WBuffer[0], WBufferLen) <> 1 then
+    begin
+         BhlSPICsHigh();
+         LogPrint('Error SPIRead BhlSPIReadWriteNoCs');
+         Exit(-1);
+    end;
+  BhlSPICsHigh();
+
+  sMessage := BhlSPIGetMemaux();
+
+  for i := 0 to RBufferLen - 1 do
+     RBuffer[i] := sMessage[i];
+  result := RBufferLen;
+end;
+
 function TBuzzpiratHardware.SPIRead(CS: byte; BufferLen: integer; var buffer: array of byte): integer;
 var
   sMessage: pbyte;
@@ -372,6 +398,7 @@ begin
     BhlSPICsLow();
     if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
     begin
+         BhlSPICsHigh();
          LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:1)');
          Exit(-1);
     end;
@@ -382,6 +409,7 @@ begin
       BhlSPICsLow();
       if BhlSPIReadWriteNoCs(BufferLen, nil, 0) <> 1 then
       begin
+         BhlSPICsHigh();
          LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:0)');
          Exit(-1);
       end;
@@ -403,6 +431,7 @@ begin
     BhlSPICsLow();
     if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
     begin
+         BhlSPICsHigh();
          LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:1)');
          Exit(-1);
     end;
@@ -413,6 +442,7 @@ begin
       BhlSPICsLow();
       if BhlSPIReadWriteNoCs(0, @buffer[0], BufferLen) <> 1 then
       begin
+         BhlSPICsHigh();
          LogPrint('Error SPIRead BhlSPIReadWriteNoCs (CS:0)');
          Exit(-1);
       end;

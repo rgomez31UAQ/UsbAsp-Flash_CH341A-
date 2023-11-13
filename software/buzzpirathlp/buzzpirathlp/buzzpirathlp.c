@@ -651,14 +651,18 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 	ComWriteByte(com_glb, size_wbuffer & 0x000000FF, 0);
 	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
 	ComWriteByte(com_glb, size & 0x000000FF, 0);
-
+	Sleep(1);
 	if (size_wbuffer)
 	{
-		ComWriteBuff(com_glb, bufferw, size_wbuffer, 0);
+		for (i = 0; i < size_wbuffer; i++)
+		{
+			ComWriteByte(com_glb, bufferw[i], 0);
+		}
 	}
 
 	if (size)
 	{
+		Sleep(1);
 		do
 		{
 			if (end_fast)
@@ -1139,12 +1143,16 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int de
 	ComWriteByte(com_glb, (size_buffwr + 1) & 0x000000FF, 0);
 	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
 	ComWriteByte(com_glb, size & 0x000000FF, 0);
-
+	Sleep(1);
 	ComWriteByte(com_glb, devaddr, 0);
 	if (size_buffwr)
 	{
-		ComWriteBuff(com_glb, buffwr, size_buffwr, 0);
+		for (i = 0; i < size_buffwr; i++)
+		{
+			ComWriteByte(com_glb, buffwr[i], 0);
+		}
 	}
+	Sleep(1);
 
 	do
 	{ 
