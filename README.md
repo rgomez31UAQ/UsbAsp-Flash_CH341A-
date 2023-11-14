@@ -101,6 +101,33 @@ If nothing appears here, you have connected something incorrectly
 
 ---
 
+# Example reading & writing winbond W25Q64FW 1.8v spi flash
+
+**WARNING**: Don't connect +3v3 or +5V to WINBOND CHIP.
+
+Follow the same steps as in the previous chapter for the 3.3v Windbond, but Connect the Winbond's VCC & Bus Pirate's VPU to an external 1.8v power source (all GNDs together):
+
+![18cntwin.png](assets/18cntwin.png)
+
+Change the following in the configuration:
+- Activate pull-ups of the Bus Pirate
+- SPI Output: Open-drain
+- SPI Speed: 30kHz
+
+![wpsi18vcng.png](assets/wpsi18vcng.png)
+
+Select W25Q64FW 1.8v when found
+
+![selectwinb18v.png](assets/selectwinb18v.png)
+
+Press "Read IC" button and wait patiently (~40 mins) (the GUI will become unresponsive)
+
+![darswnb18.png](assets/darswnb18.png)
+
+
+
+---
+
 # How to build & debug
 
 Instructions tested for Windows 11
