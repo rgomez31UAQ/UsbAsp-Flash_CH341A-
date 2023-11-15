@@ -10,6 +10,8 @@ AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C
 
 **WARNING**: I recommend using a speed of approximately 100kHz for each protocol as the maximum, since the quality of the cables is important and I do not trust that the length of yours is short, especially if there is an adapter to clips, etc. The longer the cable and the more adapters there are, coupled with lower voltage, the more you will need to use a lower speed
 
+**WARNING**: USE SHORT HIGH-QUALITY USB CABLE
+
 **WARNING**: Firmware recommended: https://github.com/therealdreg/autobuspirateupgrade/blob/main/BPv3-bootloaderv4xtov45-update_fw-TEST%20Gabriel%20Smith%20JTAG%20Fix_ENG-v0.zip
 
 
