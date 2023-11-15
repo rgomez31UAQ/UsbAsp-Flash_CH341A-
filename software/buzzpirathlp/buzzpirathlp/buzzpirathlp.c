@@ -73,9 +73,11 @@ BOOL CreateCOM(COMOP_t* com, const char* name)
 
 	GetCommTimeouts(com->handle, &timeouts);
 
-	timeouts.ReadIntervalTimeout = 100;
-	timeouts.ReadTotalTimeoutConstant = 1;
-	timeouts.ReadTotalTimeoutMultiplier = 1;
+	timeouts.ReadIntervalTimeout = 20;
+	timeouts.ReadTotalTimeoutMultiplier = 15;
+	timeouts.ReadTotalTimeoutConstant = 100;
+	timeouts.WriteTotalTimeoutMultiplier = 15;
+	timeouts.WriteTotalTimeoutConstant = 100;
 
 	SetCommTimeouts(com->handle, &timeouts);
 
@@ -105,7 +107,7 @@ size_t WINAPI ComWriteBuff(COMOP_t* com, unsigned char* buffer, size_t bytes_to_
 
 	if (max_tries == 0)
 	{
-		max_tries = 100;
+		max_tries = 5;
 	}
 
 	do
@@ -119,7 +121,7 @@ size_t WINAPI ComWriteBuff(COMOP_t* com, unsigned char* buffer, size_t bytes_to_
 			}
 			else
 			{
-				Sleep(10);
+				Sleep(5);
 			}
 		}
 		max_tries--;
@@ -145,7 +147,7 @@ size_t WINAPI ComReadBuff(COMOP_t* com, unsigned char* buffer, size_t bytes_to_r
 
 	if (max_tries == 0)
 	{
-		max_tries = 10;
+		max_tries = 5;
 	}
 
 	do
@@ -368,10 +370,10 @@ BUZZPIRATHLP_API BOOL __stdcall bhl_com_create(const char* com_name)
 BUZZPIRATHLP_API BOOL __stdcall bhl_enter_raw_bitbang(void)
 {
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
-	fprintf(LOG_FILE, "Resetting bus pirate\n");
+	fprintf(LOG_FILE, "Resetting bus pirate, wait ~1 min (5 mins without response == reconnect USB and try again)...\n");
 	ResetBusPirate(com_glb);
 	Sleep(500);
-	fprintf(LOG_FILE, "Entering bin mode\n");
+	fprintf(LOG_FILE, "Entering bin mode, wait ~1 min  (5 mins without response == reconnect USB and try again)...\n");
 	EnterBINMode(com_glb);
 	Sleep(500);
 	FlushCOMIn(com_glb);
@@ -648,8 +650,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 
 	ComWriteByte(com_glb, BHL_SPI_WRITE_THEN_READ_NO_CS, 0);
 	ComWriteByte(com_glb, (size_wbuffer >> 8) & 0x000000FF, 0);
+	Sleep(1);
 	ComWriteByte(com_glb, size_wbuffer & 0x000000FF, 0);
 	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
+	Sleep(1);
 	ComWriteByte(com_glb, size & 0x000000FF, 0);
 	Sleep(1);
 	if (size_wbuffer)
@@ -1140,8 +1144,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int de
 
 	ComWriteByte(com_glb, BHL_I2C_WRITE_THEN_READ, 0);
 	ComWriteByte(com_glb, ((size_buffwr + 1) >> 8) & 0x000000FF, 0);
+	Sleep(1);
 	ComWriteByte(com_glb, (size_buffwr + 1) & 0x000000FF, 0);
 	ComWriteByte(com_glb, (size >> 8) & 0x000000FF, 0);
+	Sleep(1);
 	ComWriteByte(com_glb, size & 0x000000FF, 0);
 	Sleep(1);
 	ComWriteByte(com_glb, devaddr, 0);
