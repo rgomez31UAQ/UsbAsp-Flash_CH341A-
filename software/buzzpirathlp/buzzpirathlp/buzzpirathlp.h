@@ -101,6 +101,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_write_byte(unsigned int b
 
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 	const char* com_name,
+	unsigned int spibug,
 	unsigned int power,
 	unsigned int pullups,
 	unsigned int khz,

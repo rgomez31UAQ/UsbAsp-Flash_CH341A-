@@ -17,7 +17,7 @@ int _main(int argc, char* argv[])
 {
 	unsigned char* data_recv = NULL;
 
-	bhl_asprog_spi_init("com8", 1, 1, BHL_SPI_125KHZ, 0, 0, 0, 0, 0);
+	bhl_asprog_spi_init("com8", 0, 1, 1, BHL_SPI_125KHZ, 0, 0, 0, 0, 0);
 	
 
 	/*

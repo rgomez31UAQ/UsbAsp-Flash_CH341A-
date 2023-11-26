@@ -35,6 +35,8 @@ last_prot_t volatile last_prot = LSTP_NONE;
 
 const char* const as_msg = "keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient. If bus pirate console freezes(~2 mins without output)/crash : close this program, reconnect USB port and try again.";
 
+unsigned int volatile spibug_enabled = 0;
+
 
 BOOL CreateCOM(COMOP_t* com, const char* name)
 {
@@ -664,6 +666,24 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 		}
 	}
 
+	if (!size && !spibug_enabled)
+	{
+		Sleep(1);
+		do
+		{
+			if (end_fast)
+			{
+				return 0;
+			}
+			spi_memaux[0] = 0;
+			ComReadByte(com_glb, spi_memaux, 0);
+			if (spi_memaux[0] != 1)
+			{
+				fprintf(LOG_FILE, "waiting for bus pirate... if you are looking this msg a lot of time, close asprogrammer and CHECK SPI BUG CHECKBOX...");
+			}
+		} while (spi_memaux[0] != 1);
+	}
+
 	if (size)
 	{
 		Sleep(1);
@@ -677,7 +697,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 			ComReadByte(com_glb, spi_memaux, 0);
 			if (spi_memaux[0] != 1)
 			{
-				fprintf(LOG_FILE, "waiting for bus pirate...");
+				fprintf(LOG_FILE, "waiting for bus pirate...  if you are looking this msg a lot of time try another USB CABLE....");
 			}
 		} while (spi_memaux[0] != 1);
 
@@ -815,6 +835,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_read(unsigned int size_re
 
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 	const char* com_name, 
+	unsigned int spibug,
 	unsigned int power, 
 	unsigned int pullups, 
 	unsigned int khz, 
@@ -829,10 +850,12 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 	unsigned int speed = 0;
 	unsigned config = 0;
 
-	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - power: %d - pullups: %d - "
+	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - spibug: %d - power: %d - pullups: %d - "
 		"khz: %d - set_smphase_end: %d - set_cke_act_to_idle: %d - set_ckp_idle_high: %d - set_out_3v3: %d - set_cs_active_high: %d\n", 
-		as_msg, com_name, power, pullups, 
+		as_msg, com_name, spibug, power, pullups, 
 		khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high);
+
+	spibug_enabled = spibug;
 
 	end_fast = 0;
 

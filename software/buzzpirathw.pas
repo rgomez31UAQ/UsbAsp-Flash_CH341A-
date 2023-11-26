@@ -22,7 +22,7 @@ type
   TBhlI2CReadByte        = function:integer; stdcall;
   TBhlI2CWriteByte       = function(byte_val: integer): integer; stdcall;
 
-  TBhlSPIInit            = function(com_name: pchar; power: integer; pullups: integer; khz: integer; set_smphase_end: integer; set_cke_act_to_idle: integer; set_ckp_idle_high: integer; set_out_3v3: integer; set_cs_active_high: integer) : integer; stdcall;
+  TBhlSPIInit            = function(com_name: pchar; spibug: integer; power: integer; pullups: integer; khz: integer; set_smphase_end: integer; set_cke_act_to_idle: integer; set_ckp_idle_high: integer; set_out_3v3: integer; set_cs_active_high: integer) : integer; stdcall;
   TBhlSPIClose           = function:integer; stdcall;
   TBhlSPIReadWriteNoCs   = function(size: integer; bufferw: PByteArray; size_wbuffer: integer): integer; stdcall;
   TBhlSPICsLow           = function: integer; stdcall;
@@ -112,6 +112,7 @@ function TBuzzpiratHardware.DevOpen: boolean;
 var Handle: THandle;
   khz: integer;
   pullups: integer;
+  spibug: integer;
   power: integer;
   just_i2c_scanner: integer;
   memaux: pbyte;
@@ -187,6 +188,13 @@ begin
 
   pullups := 0;
   power := 0;
+  spibug := 0;
+
+  if MainForm.MenuBuzzpiratSPIBUG.Checked then
+  begin
+       LogPrint('SPIBUG FIX ON');
+       spibug := 1;
+  end;
 
   if MainForm.MenuBuzzpiratPower.Checked then
   begin
@@ -318,7 +326,7 @@ begin
       LogPrint('out Open Drain(HiZ)');
     end;
 
-    if BhlSPIInit(PChar(FCOMPort), power, pullups, khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high) <> 1 then
+    if BhlSPIInit(PChar(FCOMPort), spibug, power, pullups, khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high) <> 1 then
     begin
       LogPrint('SPI Init fail');
       Exit(false);

@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 209
   Width = 853
   ActiveControl = RadioSPI
-  Caption = 'AsProgrammer dregmod v3.11 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
+  Caption = 'AsProgrammer dregmod v3.13 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
   ClientHeight = 521
   ClientWidth = 853
   Constraints.MinHeight = 300
@@ -699,7 +699,7 @@ object MainForm: TMainForm
     Width = 853
     Align = alBottom
     Lines.Strings = (
-      'AsProgrammer dregmod v3.11'
+      'AsProgrammer dregmod v3.13'
       'https://github.com/therealdreg/asprogrammer-dregmod'
       'dreg@rootkit.es'
     )
@@ -981,6 +981,10 @@ object MainForm: TMainForm
 		object MenuBuzzpiratCOMPort: TMenuItem
           Caption = 'Buzzpirat / Buspirate COMPort:'
           OnClick = MenuBuzzpiratCOMPortClick
+        end
+		object MenuBuzzpiratSPIBUG: TMenuItem
+          AutoCheck = True
+          Caption = 'Fix SPI Firmware Bug'
         end
 		object MenuBuzzpiratPullups: TMenuItem
           AutoCheck = True

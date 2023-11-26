@@ -12,7 +12,13 @@ AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C
 
 **WARNING**: USE SHORT HIGH-QUALITY USB CABLE
 
-**WARNING**: Firmware recommended: https://github.com/therealdreg/autobuspirateupgrade/blob/main/BPv3-bootloaderv4xtov45-update_fw-TEST%20Gabriel%20Smith%20JTAG%20Fix_ENG-v0.zip
+**WARNING**: Some firmwares have a bug in the binary SPI mode (like the latest community firmware). To make it work, you should select the checkbox: Buzzpirat Menu -> Fix SPI Firmware Bug.
+
+![spibugcheck](assets/spibugcheck.png) 
+
+# Best Firmware
+
+**I recommend using the latest Buzzpirat firmware for the Bus Pirate v3:** https://buzzpirat.com/docs/firmware-update/
 
 
 # Download

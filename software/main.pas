@@ -103,6 +103,7 @@ type
     MenuItemHardware: TMenuItem;
     MenuBuzzpirat: TMenuItem;
     MenuBuzzpiratPullups: TMenuItem;
+    MenuBuzzpiratSPIBUG: TMenuItem;
     MenuBuzzpiratResetEach: TMenuItem;
     ClearBuzzlogMenuItem: TMenuItem;
     MenuBuzzpiratPower: TMenuItem;
