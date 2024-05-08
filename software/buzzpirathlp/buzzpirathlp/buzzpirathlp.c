@@ -857,6 +857,11 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 
 	spibug_enabled = spibug;
 
+	if (spibug_enabled)
+	{
+		fprintf(LOG_FILE, "\nWARNING: spibug_enabled dont works with a fixed firmware!\n");
+	}
+
 	end_fast = 0;
 
 	last_status = 0x69;
@@ -920,7 +925,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 	}
 
 	config = BHL_SPI_CONF_DEFAULTS | BHL_SPI_CONF_CKE_ACT_TO_IDLE;
-	if (set_out_3v3)
+	if (set_out_3v3 && !pullups)
 	{
 		config |= BHL_SPI_CONF_OUT_3V3;
 	}

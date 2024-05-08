@@ -14,7 +14,7 @@ http://dangerousprototypes.com/forum/index.php?topic=10698.0
 
 **WARNING**: USE SHORT HIGH-QUALITY USB CABLE
 
-**WARNING**: Some firmwares have a bug in the binary SPI mode (like the latest community firmware). To make it work, you should select the checkbox: Buzzpirat Menu -> Fix SPI Firmware Bug.
+**WARNING**: Some firmwares have a bug in the binary SPI mode (like the latest community firmware). To make it work, you should select the checkbox: Buzzpirat Menu -> Fix SPI Firmware Bug. Note that if you activate this option, a firmware that does not have the bug will not function properly! Activate it only if you are experiencing issues.
 
 ![spibugcheck](assets/spibugcheck.png) 
 
@@ -246,6 +246,7 @@ in your DLL code to initiate debugging from the desired point
 # Credits
 
 - nofeletru for ASprogrammer: https://github.com/nofeletru/UsbAsp-flash
+- Ian Lesnet (Bus Pirate Creator): https://buspirate.com/
 
 # Related
 
