@@ -15,7 +15,7 @@ uses
   XMLRead, XMLWrite, DOM, msgstr, Translations, LCLProc, LCLType, LCLTranslator,
   LResources, MPHexEditorEx, MPHexEditor, search, sregedit,
   utilfunc, findchip, DateUtils, lazUTF8,
-  pascalc, ScriptsFunc, ScriptEdit, baseHW, UsbAspHW, ch341hw, avrisphw, arduinohw;
+  pascalc, ScriptsFunc, ScriptEdit, baseHW, UsbAspHW, ch341hw, avrisphw, arduinohw, buzzpirathw;
 
 type
 
@@ -85,16 +85,44 @@ type
     BlankCheckMenuItem: TMenuItem;
     AllowInsertItem: TMenuItem;
     MenuHWARDUINO: TMenuItem;
+    MenuHWBUZZPIRAT: TMenuItem;
     MenuArduinoSPIClock: TMenuItem;
     MenuArduinoISP8MHz: TMenuItem;
     MenuArduinoISP4MHz: TMenuItem;
     MenuArduinoISP2MHz: TMenuItem;
     MenuArduinoISP1MHz: TMenuItem;
     MenuArduinoCOMPort: TMenuItem;
+    MenuBuzzpiratCOMPort: TMenuItem;
     MenuSkipFF: TMenuItem;
     MPHexEditorEx: TMPHexEditorEx;
     ScriptsMenuItem: TMenuItem;
+    CreditsMenuItem: TMenuItem;
+    BzHelpMenuItem: TMenuItem;
+    DebugconsoleMenuItem: TMenuItem;
+    ListcomportsMenuItem: TMenuItem;
     MenuItemHardware: TMenuItem;
+    MenuBuzzpirat: TMenuItem;
+    MenuBuzzpiratPullups: TMenuItem;
+    MenuBuzzpiratSPIBUG: TMenuItem;
+    MenuBuzzpiratResetEach: TMenuItem;
+    ClearBuzzlogMenuItem: TMenuItem;
+    MenuBuzzpiratPower: TMenuItem;
+    MenuBuzzpiratSPINormal: TMenuItem;
+    MenuBuzzpiratSPIHiz: TMenuItem;
+    MenuBuzzpiratSPI8MHz: TMenuItem;
+    MenuBuzzpiratSPI4MHz: TMenuItem;
+    MenuBuzzpiratSPI2P6MHz: TMenuItem;
+    MenuBuzzpiratSPI2MHz: TMenuItem;
+    MenuBuzzpiratSPI1MHz: TMenuItem;
+    MenuBuzzpiratSPI250KHz: TMenuItem;
+    MenuBuzzpiratSPI125KHz: TMenuItem;
+    MenuBuzzpiratSPI30KHz: TMenuItem;
+    MenuBuzzpiratI2CClock: TMenuItem;
+    MenuBuzzpiratI2C400KHz: TMenuItem;
+    MenuBuzzpiratI2C100KHz: TMenuItem;
+    MenuBuzzpiratI2C50KHz: TMenuItem;
+    MenuBuzzpiratI2C5KHz: TMenuItem;
+    MenuBuzzpiratJustI2CScan: TMenuItem;
     MenuItemBenchmark: TMenuItem;
     MenuItemEditSreg: TMenuItem;
     MenuItemReadSreg: TMenuItem;
@@ -157,7 +185,9 @@ type
     procedure ChangeLang(Sender: TObject);
     procedure ComboItem1Click(Sender: TObject);
     procedure MenuArduinoCOMPortClick(Sender: TObject);
+    procedure MenuBuzzpiratCOMPortClick(Sender: TObject);
     procedure MenuHWARDUINOClick(Sender: TObject);
+    procedure MenuHWBUZZPIRATClick(Sender: TObject);
     procedure MenuHWAVRISPClick(Sender: TObject);
     procedure MenuCopyToClipClick(Sender: TObject);
     procedure MenuFindChipClick(Sender: TObject);
@@ -183,6 +213,10 @@ type
     procedure ButtonCancelClick(Sender: TObject);
     procedure I2C_DevAddrChange(Sender: TObject);
     procedure ScriptsMenuItemClick(Sender: TObject);
+    procedure CreditsMenuItemClick(Sender: TObject);
+    procedure BzHelpMenuItemClick(Sender: TObject);
+    procedure DebugconsoleMenuItemClick(Sender: TObject);
+    procedure ListcomportsMenuItemClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure StartAddressEditChange(Sender: TObject);
     procedure StartAddressEditKeyPress(Sender: TObject; var Key: char);
@@ -238,15 +272,18 @@ var
 
   AsProgrammer: TAsProgrammer;
 
+  Buzzpirat_ClocKhz: integer = 0;
+  Buzzpirat_Pulls: integer = 0;
+  Buzzpirat_Power: integer = 0;
   Arduino_COMPort: string;
   Arduino_BaudRate: integer = 1000000;
-
+  Buzzpirat_COMPort: string;
 implementation
 
 
 var
   TimeCounter: TDateTime;
-  CurrentLang: string = 'ru';
+  CurrentLang: string = 'en';
 
 {$R *.lfm}
 
@@ -397,7 +434,9 @@ begin
 
   if CurrentLang = '' then
   begin
-    CurrentLang := 'ru';
+    CurrentLang := 'en';
+    LRSTranslator:= TPOTranslator.Create(PODirectory + CurrentLang + '.po');
+    Translations.TranslateResourceStrings(PODirectory + CurrentLang + '.po');
     Exit;
   end;
 
@@ -417,7 +456,6 @@ end;
 
 function OpenDevice: boolean;
 begin
-
   if not AsProgrammer.Programmer.DevOpen then
   begin
     LogPrint(AsProgrammer.Programmer.GetLastError);
@@ -470,6 +508,14 @@ var
   Speed: byte;
 begin
   if AsProgrammer.Current_HW = CHW_ARDUINO then
+  begin
+    if MainForm.MenuArduinoISP8Mhz.Checked then Speed := MainForm.MenuArduinoISP8Mhz.Tag;
+    if MainForm.MenuArduinoISP4Mhz.Checked then Speed := MainForm.MenuArduinoISP4Mhz.Tag;
+    if MainForm.MenuArduinoISP2Mhz.Checked then Speed := MainForm.MenuArduinoISP2Mhz.Tag;
+    if MainForm.MenuArduinoISP1Mhz.Checked then Speed := MainForm.MenuArduinoISP1Mhz.Tag;
+  end;
+
+  if AsProgrammer.Current_HW = CHW_BUZZPIRAT then
   begin
     if MainForm.MenuArduinoISP8Mhz.Checked then Speed := MainForm.MenuArduinoISP8Mhz.Tag;
     if MainForm.MenuArduinoISP4Mhz.Checked then Speed := MainForm.MenuArduinoISP4Mhz.Tag;
@@ -1761,6 +1807,16 @@ begin
     AsProgrammer.Current_HW := CHW_ARDUINO;
   end;
 
+  if programmer = CHW_BUZZPIRAT then
+  begin
+    MainForm.MenuSPIClock.Visible:= false;
+    MainForm.MenuAVRISPSPIClock.Visible:= false;
+    MainForm.MenuArduinoSPIClock.Visible:= false;
+    MainForm.MenuFT232SPIClock.Visible:= false;
+    MainForm.MenuMicrowire.Enabled:= false;
+    AsProgrammer.Current_HW := CHW_BUZZPIRAT;
+  end;
+
   if programmer = CHW_FT232H then
   begin
     MainForm.MenuFT232SPIClock.Visible:= true;
@@ -1851,6 +1907,12 @@ begin
   MainForm.MenuArduinoCOMPort.Caption := 'Arduino COMPort: '+Arduino_COMPort;
 end;
 
+procedure TMainForm.MenuBuzzpiratCOMPortClick(Sender: TObject);
+begin
+  Buzzpirat_COMPort := InputBox('Buzzpirat / Buspirate COMPort','',Buzzpirat_COMPort);
+  MainForm.MenuBuzzpiratCOMPort.Caption := 'Buzzpirat / Buspirate COMPort: '+Buzzpirat_COMPort;
+end;
+
 procedure TMainForm.MenuCopyToClipClick(Sender: TObject);
 begin
     MainForm.MPHexEditorEx.CBCopy;
@@ -1907,6 +1969,11 @@ end;
 procedure TMainForm.MenuHWARDUINOClick(Sender: TObject);
 begin
   SelectHW(CHW_ARDUINO);
+end;
+
+procedure TMainForm.MenuHWBUZZPIRATClick(Sender: TObject);
+begin
+  SelectHW(CHW_BUZZPIRAT);
 end;
 
 procedure TMainForm.MenuItemBenchmarkClick(Sender: TObject);
@@ -2700,6 +2767,30 @@ begin
   ScriptEditForm.Show;
 end;
 
+procedure TMainForm.DebugconsoleMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start tail -F buzzpirathlp.log', []);
+end;
+
+procedure TMainForm.BzHelpMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start https://github.com/therealdreg/asprogrammer-dregmod', []);
+end;
+
+procedure TMainForm.CreditsMenuItemClick(Sender: TObject);
+var
+  credits: string;
+begin
+  credits := 'nofeletru https://github.com/nofeletru, Dreg @therealdreg https://github.com/therealdreg';
+  LogPrint(credits);
+  ShowMessage(credits);
+end;
+
+procedure TMainForm.ListcomportsMenuItemClick(Sender: TObject);
+begin
+     ExecuteProcess('cmd.exe', '/c start cmd /k mode', []);
+end;
+
 procedure TMainForm.SpeedButton1Click(Sender: TObject);
 begin
   if ComboBox_chip_scriptrun.Items.Capacity < 1 then Exit;;
@@ -2773,7 +2864,10 @@ begin
   AsProgrammer.AddHW(TCH341Hardware.Create);
   AsProgrammer.AddHW(TAvrispHardware.Create);
   AsProgrammer.AddHW(TArduinoHardware.Create);
+  AsProgrammer.AddHW(TBuzzpiratHardware.Create);
   AsProgrammer.AddHW(TFT232HHardware.Create);
+
+  SelectHW(CHW_BUZZPIRAT); // dreg's dirty hack
 
   LoadChipList(ChipListFile);
   RomF := TMemoryStream.Create;
@@ -3152,6 +3246,8 @@ begin
       TDOMElement(ParentNode).SetAttribute('hw', 'avrisp');
     if MainForm.MenuHWARDUINO.Checked then
       TDOMElement(ParentNode).SetAttribute('hw', 'arduino');
+    if MainForm.MenuHWBUZZPIRAT.Checked then
+      TDOMElement(ParentNode).SetAttribute('hw', 'buzzpirat');
     if MainForm.MenuHWFT232H.Checked then
       TDOMElement(ParentNode).SetAttribute('hw', 'ft232h');
 
@@ -3245,6 +3341,12 @@ begin
         begin
           MainForm.MenuHWArduino.Checked := true;
           SelectHW(CHW_ARDUINO);
+        end;
+
+        if OptVal = 'buzzpirat' then
+        begin
+          MainForm.MenuHWBuzzpirat.Checked := true;
+          SelectHW(CHW_BUZZPIRAT);
         end;
 
         if OptVal = 'ft232h' then

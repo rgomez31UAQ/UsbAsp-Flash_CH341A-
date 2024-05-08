@@ -5,7 +5,7 @@ unit spi25;
 interface
 
 uses
-  Classes, Forms, SysUtils, utilfunc;
+  Classes, Forms, SysUtils, utilfunc, BaseHW;
 
 const
 
@@ -50,6 +50,7 @@ function UsbAsp25_EX4B(): integer;
 
 function SPIRead(CS: byte; BufferLen: integer; out buffer: array of byte): integer;
 function SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer;
+function SPIReadWrite(CSR: byte; CSW: byte; RBufferLen: integer; out rbuffer: array of byte; WBufferLen: integer; wbuffer: array of byte): integer;
 
 implementation
 
@@ -126,8 +127,15 @@ begin
   buff[2] := hi(lo(addr));
   buff[3] := lo(addr);
 
-  SPIWrite(0, 4, buff);
-  result := SPIRead(1, bufflen, buffer);
+  if AsProgrammer.Current_HW = CHW_BUZZPIRAT then
+  begin
+    result := AsProgrammer.Programmer.SPIWriteRead(1, 4, buff, bufflen, buffer);
+  end
+  else
+  begin
+      SPIWrite(0, 4, buff);
+      result := SPIRead(1, bufflen, buffer);
+  end;
 end;
 
 function UsbAsp25_Read32bitAddr(Opcode: byte; Addr: longword; var buffer: array of byte; bufflen: integer): integer;
@@ -141,8 +149,15 @@ begin
   buff[3] := hi(lo(addr));
   buff[4] := lo(lo(addr));
 
-  SPIWrite(0, 5, buff);
-  result := SPIRead(1, bufflen, buffer);
+  if AsProgrammer.Current_HW = CHW_BUZZPIRAT then
+  begin
+    result := AsProgrammer.Programmer.SPIWriteRead(1, 5, buff, bufflen, buffer);
+  end
+  else
+  begin
+      SPIWrite(0, 5, buff);
+      result := SPIRead(1, bufflen, buffer);
+  end;
 end;
 
 function UsbAsp25_Wren(): integer;
@@ -205,8 +220,15 @@ end;
 
 function UsbAsp25_ReadSR(var sreg: byte; opcode: byte = $05): integer;
 begin
-  SPIWrite(0, 1, opcode);
-  result := SPIRead(1, 1, sreg);
+  if AsProgrammer.Current_HW = CHW_BUZZPIRAT then
+    begin
+      result := AsProgrammer.Programmer.SPIWriteRead(1, 1, opcode, 1, sreg);
+    end
+    else
+    begin
+         SPIWrite(0, 1, opcode);
+         result := SPIRead(1, 1, sreg);
+    end;
 end;
 
 //Возвращает сколько байт записали
@@ -293,6 +315,19 @@ end;
 function SPIWrite(CS: byte; BufferLen: integer; buffer: array of byte): integer;
 begin
   result := AsProgrammer.Programmer.SPIWrite(CS, BufferLen, buffer);
+end;
+
+function SPIReadWrite(CSR: byte; CSW: byte; RBufferLen: integer; out rbuffer: array of byte; WBufferLen: integer; wbuffer: array of byte): integer;
+begin
+  if AsProgrammer.Current_HW = CHW_BUZZPIRAT then
+  begin
+    result := AsProgrammer.Programmer.SPIWriteRead(1, WBufferLen, wbuffer, RBufferLen, rbuffer);
+  end
+  else
+  begin
+       SPIWrite(CSW, WBufferLen, wbuffer);
+       result := SPIRead(CSR, RBufferLen, rbuffer);
+  end;
 end;
 
 end.
