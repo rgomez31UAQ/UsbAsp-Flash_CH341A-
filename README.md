@@ -1,6 +1,6 @@
 # AsProgrammer dregmod
 
-AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C, MicroWire. Supports Buzzpirat, Bus Pirate, CH341a, UsbAsp, AVRISP(LUFA), Arduino & FT232H
+AsProgrammer dregmod allow you to program flash memory on the protocols spi, I2C, MicroWire. Supports Buzzpirat, Bus Pirate, CH341a, UsbAsp, CH347, AVRISP(LUFA), Arduino & FT232H
 
 http://dangerousprototypes.com/forum/index.php?topic=10698.0
 
