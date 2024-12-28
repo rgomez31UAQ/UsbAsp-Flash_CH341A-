@@ -239,9 +239,33 @@ __debugbreak();
 
 in your DLL code to initiate debugging from the desired point
 
+# How to Add unsupported chip to AsProgrammer by Floyd77 
 
-![debugnativedll](assets/debugnativedll.png)
+[TUTORIAL] Add unsupported chip to AsProgrammer
 
+Search for your unsupported chip here:
+https://chromium.googlesource.com/chromiumos/third_party/flashrom/+/798d2adc9527f724bc5096a646cf99efdbb6b59e/flashchips.h
+Tip: Ctrl+F to search through the list.
+
+I'll take W25Q256JW as example. You'll see this on that list:
+#define WINBOND_NEX_W25Q256_W	0x6019	/* W25Q256JW */
+
+Open chiplist.xml located on AsProgrammer folder. I use Notepad++ to edit the file. Search for the brand on the list, in this case "Winbond".
+
+You have to add a new line into that list, following with the example you need to insert this line:
+<W25Q256JW_1.8V id="EF6019" page="256" size="33554432"/>
+
+Save and open AsProgrammer, search for it manually, it has to appear on the list and it will be auto detected when you connect the chip to the programmer and click on "Read ID" button.
+
+Notes:
+
+When the chip uses 1.8V you add "_1.8V" after the model name.
+The first characters for the "id" differ for each brand. In this case (Winbond) they are the letters "EF" followed by the number taken from the "flashchips.h" list from step 1: 0x6019 translates to "EF6019".
+Page and size are easy to fill if you compare the data with another similar chip from the database. In this example, all Winbond chips have a page value of 256 and the size value is the result of dividing 256/8 to get Mebibytes (32) and then convert to bytes. 
+
+Converter:
+
+https://convertlive.com/u/convert/mebibytes/to/bytes#32
 
 # Credits
 
