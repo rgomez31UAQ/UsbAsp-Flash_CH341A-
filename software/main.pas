@@ -117,6 +117,7 @@ type
     MenuBuzzpiratResetEach: TMenuItem;
     ClearBuzzlogMenuItem: TMenuItem;
     MenuBuzzpiratPower: TMenuItem;
+	MenuBuzzpiratLessdbg: TMenuItem;
     MenuBuzzpiratSPINormal: TMenuItem;
     MenuBuzzpiratSPIHiz: TMenuItem;
     MenuBuzzpiratSPI8MHz: TMenuItem;

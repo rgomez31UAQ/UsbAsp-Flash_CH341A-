@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 209
   Width = 853
   ActiveControl = RadioSPI
-  Caption = 'AsProgrammer dregmod v3.15 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
+  Caption = 'AsProgrammer dregmod v3.17 - Stop all current operations: keep pressing ESC key - Launch Console: keep pressing F1 key'
   ClientHeight = 541
   ClientWidth = 853
   Constraints.MinHeight = 300
@@ -699,7 +699,7 @@ object MainForm: TMainForm
     Width = 853
     Align = alBottom
     Lines.Strings = (
-      'AsProgrammer dregmod v3.15'
+      'AsProgrammer dregmod v3.17'
       'https://github.com/therealdreg/asprogrammer-dregmod'
       'dreg@rootkit.es'
     )
@@ -1045,12 +1045,17 @@ object MainForm: TMainForm
         end
 		object MenuBuzzpiratPullups: TMenuItem
           AutoCheck = True
-          Caption = 'Pull UPs ON'
+          Caption = 'Pull UPs ON (buzzif check)'
         end
         object MenuBuzzpiratPower: TMenuItem
 		  Checked = True
           AutoCheck = True
-          Caption = 'Power ON'
+          Caption = 'Power ON (buzzif check)'
+        end
+		object MenuBuzzpiratLessdbg: TMenuItem
+		  Checked = True
+          AutoCheck = True
+          Caption = 'Less debug (TO-DO)'
         end
 		object MenuBuzzpiratResetEach: TMenuItem
 		  Checked = True
@@ -1100,7 +1105,7 @@ object MainForm: TMainForm
 			object MenuBuzzpiratSPIHiz: TMenuItem
 				Tag = 1
 				AutoCheck = True
-				Caption = 'Output Open drain (H=Hi-Z)'
+				Caption = 'Output Open drain (H=Hi-Z) (buzzif check)'
 				RadioItem = True
 			end  
 			object MenuBuzzpiratSPIClock: TMenuItem
@@ -1143,7 +1148,7 @@ object MainForm: TMainForm
 			  end
 			  object MenuBuzzpiratSPI30KHz: TMenuItem
 				AutoCheck = True
-				Caption = '30 KHz'
+				Caption = '30 KHz (1v8)'
 				RadioItem = True
 			  end
 			end

@@ -89,7 +89,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_i2c_scan(unsigned char* detected_arr
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_clear_log(void);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_reset_once(unsigned int setf);
 
-BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner);
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(unsigned int dbglvl, const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_close(void);
 
 BUZZPIRATHLP_API unsigned char* __stdcall bhl_asprog_i2c_get_memaux(void);
@@ -100,6 +100,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_read_byte(void);
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_write_byte(unsigned int byte);
 
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
+	unsigned int dbglvl,
 	const char* com_name,
 	unsigned int spibug,
 	unsigned int power,

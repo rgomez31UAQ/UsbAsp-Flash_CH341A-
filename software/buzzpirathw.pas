@@ -13,7 +13,7 @@ type
   TBhlClearLog           = function:integer; stdcall;
   TBhlResetOnce          = function(setf: integer): integer; stdcall;
 
-  TBhlI2CInit            = function(com_name: pchar; power: integer; pullups: integer; khz: integer; just_i2c_scanner: integer): integer; stdcall;
+  TBhlI2CInit            = function(dbglvl: integer; com_name: pchar; power: integer; pullups: integer; khz: integer; just_i2c_scanner: integer): integer; stdcall;
   TBhlI2CClose           = function:integer; stdcall;
   TBhlI2CGetMemaux       = function:pbyte; stdcall;
   TBhlI2CReadWrite       = function(devaddr: integer; bufflen: integer; buffer: PByteArray; length: integer): integer; stdcall;
@@ -22,7 +22,7 @@ type
   TBhlI2CReadByte        = function:integer; stdcall;
   TBhlI2CWriteByte       = function(byte_val: integer): integer; stdcall;
 
-  TBhlSPIInit            = function(com_name: pchar; spibug: integer; power: integer; pullups: integer; khz: integer; set_smphase_end: integer; set_cke_act_to_idle: integer; set_ckp_idle_high: integer; set_out_3v3: integer; set_cs_active_high: integer) : integer; stdcall;
+  TBhlSPIInit            = function(dbglvl: integer; com_name: pchar; spibug: integer; power: integer; pullups: integer; khz: integer; set_smphase_end: integer; set_cke_act_to_idle: integer; set_ckp_idle_high: integer; set_out_3v3: integer; set_cs_active_high: integer) : integer; stdcall;
   TBhlSPIClose           = function:integer; stdcall;
   TBhlSPIReadWriteNoCs   = function(size: integer; bufferw: PByteArray; size_wbuffer: integer): integer; stdcall;
   TBhlSPICsLow           = function: integer; stdcall;
@@ -114,6 +114,7 @@ var Handle: THandle;
   pullups: integer;
   spibug: integer;
   power: integer;
+  dbglvl: integer;
   just_i2c_scanner: integer;
   memaux: pbyte;
   i2c_info: string;
@@ -189,6 +190,13 @@ begin
   pullups := 0;
   power := 0;
   spibug := 0;
+  dbglvl := 0;
+
+  if MainForm.MenuBuzzpiratLessdbg.Checked then
+  begin
+    LogPrint('dbglvl 1');
+    dbglvl := 1;
+  end;
 
   if MainForm.MenuBuzzpiratSPIBUG.Checked then
   begin
@@ -243,7 +251,7 @@ begin
 
     LogPrint('keep pressing ESC key to cancel... keep pressing F1 to relaunch this console... ASProgrammer GUI will be unresponsive while BUS PIRATE is operating. BUS PIRATE is slow, please be (very) patient. If bus pirate console freezes(~2 mins without output)/crash : close this program, reconnect USB port and try again.');
 
-    if BhlI2CInit(PChar(FCOMPort), power, pullups, khz, just_i2c_scanner) <> 1 then
+    if BhlI2CInit(dbglvl, PChar(FCOMPort), power, pullups, khz, just_i2c_scanner) <> 1 then
     begin
       LogPrint('I2C Init fail');
       Exit(false);
@@ -326,7 +334,7 @@ begin
       LogPrint('out Open Drain(HiZ)');
     end;
 
-    if BhlSPIInit(PChar(FCOMPort), spibug, power, pullups, khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high) <> 1 then
+    if BhlSPIInit(dbglvl, PChar(FCOMPort), spibug, power, pullups, khz, set_smphase_end, set_cke_act_to_idle, set_ckp_idle_high, set_out_3v3, set_cs_active_high) <> 1 then
     begin
       LogPrint('SPI Init fail');
       Exit(false);

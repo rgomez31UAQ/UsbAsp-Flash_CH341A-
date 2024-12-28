@@ -14,6 +14,11 @@
 #include "log_en.h"
 #include <share.h>
 
+unsigned int gdbglvl = 0;
+unsigned int idblk = 0;
+
+#define TIME_DBG_P (0x69 / 5)
+
 typedef struct
 {
 	HANDLE handle;
@@ -668,6 +673,8 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 
 	if (!size && !spibug_enabled)
 	{
+		if (gdbglvl)
+			Sleep(1);
 		Sleep(1);
 		do
 		{
@@ -686,6 +693,9 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 
 	if (size)
 	{
+		if (gdbglvl)
+			Sleep(1);
+
 		Sleep(1);
 		do
 		{
@@ -702,33 +712,39 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_readwrite_no_cs(unsigned 
 		} while (spi_memaux[0] != 1);
 
 		ComReadBuff(com_glb, spi_memaux, size, 0);
-
-		fprintf(LOG_FILE, "\n0x%08X  ", 0);
-		for (i = 0; i < size; i++)
+		
+		if (!gdbglvl || (idblk++ % TIME_DBG_P) == 0)
 		{
-			fprintf(LOG_FILE, "%02X ", spi_memaux[i]);
-			if ((i + 1) % 8 == 0)
+			fprintf(LOG_FILE, "\n0x%08X  ", 0);
+			for (i = 0; i < size; i++)
 			{
-				fprintf(LOG_FILE, "  ");
-				for (j = i - 7; j < i; j++)
+				fprintf(LOG_FILE, "%02X ", spi_memaux[i]);
+				if ((i + 1) % 8 == 0)
 				{
-					fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
-				}
-				if (i + 1 != size)
-				{
-					fprintf(LOG_FILE, "\n0x%08X  ", i);
+					fprintf(LOG_FILE, "  ");
+					for (j = i - 7; j < i; j++)
+					{
+						fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
+					}
+					if (i + 1 != size)
+					{
+						fprintf(LOG_FILE, "\n0x%08X  ", i);
+					}
 				}
 			}
+			j = i - (size % 8);
+			for (; j < i; j++)
+			{
+				fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
+			}
+			fprintf(LOG_FILE, "\n\n");
 		}
-		j = i - (size % 8);
-		for (; j < i; j++)
-		{
-			fprintf(LOG_FILE, "%c", (spi_memaux[j] >= 0x20 && spi_memaux[j] <= 0x7E) ? spi_memaux[j] : '.');
-		}
-		fprintf(LOG_FILE, "\n\n");
 	}
 
 	// FlushCOMIn(com_glb);
+
+	if (gdbglvl)
+		Sleep(1);
 
 	return 1;
 }
@@ -834,6 +850,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_read(unsigned int size_re
 }
 
 BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
+	unsigned int dbglvl,
 	const char* com_name, 
 	unsigned int spibug,
 	unsigned int power, 
@@ -849,6 +866,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_init(
 	unsigned int phs = 0;
 	unsigned int speed = 0;
 	unsigned config = 0;
+	
+	//gdbglvl = dbglvl;
+	gdbglvl = 0;
+	idblk = 0;
 
 	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - spibug: %d - power: %d - pullups: %d - "
 		"khz: %d - set_smphase_end: %d - set_cke_act_to_idle: %d - set_ckp_idle_high: %d - set_out_3v3: %d - set_cs_active_high: %d\n", 
@@ -982,7 +1003,7 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_spi_close(void)
 	return 1;
 }
 
-BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner)
+BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(unsigned int dbglvl, const char* com_name, unsigned int power, unsigned int pullups, unsigned int khz, unsigned int just_i2c_scanner)
 {
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 	unsigned int speed = 0;
@@ -991,6 +1012,10 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_init(const char* com_name
 	unsigned int retf = 0;
 	unsigned int i = 0;
 	unsigned char* curr = NULL;
+	
+	gdbglvl = dbglvl;
+	gdbglvl = 0;
+	idblk = 0;
 
 	fprintf(LOG_FILE, "\n\n%s\n\ncom_name: %s - power: %d - pullups: %d - "
 		"khz: %d just_i2c_scanner: %d\n", 
@@ -1206,30 +1231,36 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_readwrite(unsigned int de
 	{
 		ComReadBuff(com_glb, i2c_memaux, size, 0);
 
-		fprintf(LOG_FILE, "\n0x%08X  ", 0);
-		for (i = 0; i < size; i++)
+		if (!gdbglvl || (idblk++ % TIME_DBG_P) == 0)
 		{
-			fprintf(LOG_FILE, "%02X ", i2c_memaux[i]);
-			if ((i + 1) % 8 == 0)
+			fprintf(LOG_FILE, "\n0x%08X  ", 0);
+			for (i = 0; i < size; i++)
 			{
-				fprintf(LOG_FILE, "  ");
-				for (j = i - 7; j < i; j++)
+				fprintf(LOG_FILE, "%02X ", i2c_memaux[i]);
+				if ((i + 1) % 8 == 0)
 				{
-					fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
-				}
-				if (i + 1 != size)
-				{
-					fprintf(LOG_FILE, "\n0x%08X  ", i);
+					fprintf(LOG_FILE, "  ");
+					for (j = i - 7; j < i; j++)
+					{
+						fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
+					}
+					if (i + 1 != size)
+					{
+						fprintf(LOG_FILE, "\n0x%08X  ", i);
+					}
 				}
 			}
+			j = i - (size % 8);
+			for (; j < i; j++)
+			{
+				fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
+			}
+			fprintf(LOG_FILE, "\n\n");
 		}
-		j = i - (size % 8);
-		for (; j < i; j++)
-		{
-			fprintf(LOG_FILE, "%c", (i2c_memaux[j] >= 0x20 && i2c_memaux[j] <= 0x7E) ? i2c_memaux[j] : '.');
-		}
-		fprintf(LOG_FILE, "\n\n");
 	}
+
+	if (gdbglvl)
+		Sleep(1);
 
 	return 1;
 }
@@ -1239,7 +1270,8 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_start(void)
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 	unsigned char receive_buf[10] = { 0 };
 
-	fprintf(LOG_FILE, "bhl_asprog_i2c_start\n");
+	if (!gdbglvl)
+		fprintf(LOG_FILE, "bhl_asprog_i2c_start\n");
 
 	if (end_fast)
 	{
@@ -1258,7 +1290,8 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_stop(void)
 #pragma comment(linker, "/EXPORT:" __FUNCTION__ "=" __FUNCDNAME__)
 	unsigned char receive_buf[10] = { 0 };
 
-	fprintf(LOG_FILE, "bhl_asprog_i2c_stop\n");
+	if (!gdbglvl)
+		fprintf(LOG_FILE, "bhl_asprog_i2c_stop\n");
 
 	if (end_fast)
 	{
@@ -1277,7 +1310,8 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_read_byte(void)
 	unsigned char receive_buf[10] = { 0 };
 	unsigned char buff[] = { BHL_I2C_READ_BYTE , BHL_I2C_SEND_ACK };
 
-	fprintf(LOG_FILE, "bhl_asprog_i2c_read_byte\n");
+	if (!gdbglvl)
+		fprintf(LOG_FILE, "bhl_asprog_i2c_read_byte\n");
 
 	if (end_fast)
 	{
@@ -1298,7 +1332,8 @@ BUZZPIRATHLP_API unsigned int __stdcall bhl_asprog_i2c_write_byte(unsigned int b
 	unsigned char receive_buf[10] = { 0 };
 	unsigned char buff[] = { BHL_I2C_BULK_WRITE, byte };
 
-	fprintf(LOG_FILE, "bhl_asprog_i2c_write_byte\n");
+	if (!gdbglvl)
+		fprintf(LOG_FILE, "bhl_asprog_i2c_write_byte\n");
 
 	if (end_fast)
 	{
